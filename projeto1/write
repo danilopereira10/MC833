@@ -1,0 +1,5 @@
+Write: se você mandar escrever 1000 bytes e o write escrever 500 bytes, é responsabilidade sua escrever os outros 500.
+
+99,99% das vezes o write vai funcionar, mas vão ter vezes que o write não  vai escrever tudo e vamos ter que complementar
+
+Num socket não pode se pedir mais do que 64k para receber ou escrever (não sei qual das duas operações ou se é para as duas).	
