@@ -60,6 +60,9 @@ int main(void)
     // make a socket using the information gleaned from getaddrinfo():
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
+
+	connect(sockfd, res->ai_addr, res->ai_addrlen);
+
 	return 0;
 }
 

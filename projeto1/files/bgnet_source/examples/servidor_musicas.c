@@ -43,26 +43,35 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+#define MYPORT "3490"
 int main(void)
 {
+	struct sockaddr_storage their_addr;
+	socklen_t addr_size;
 	struct addrinfo hints, *res;
-	int sockfd;
+	int sockfd, new_fd;
 
 	// first, load up address structs with getaddrinfo():
 
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
-	hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
+	hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
 
-	getaddrinfo("www.example.com", "3490", &hints, &res);
+	getaddrinfo(NULL, MYPORT, &hints, &res);
 
-	// make a socket using the information gleaned from getaddrinfo():
+	// make a socket, bind it, and listen on it:
+
 	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-
 	bind(sockfd, res->ai_addr, res->ai_addrlen);
+	listen(sockfd, BACKLOG);
 
-	listen(sockfd, 10);
+	// now accept an incoming connection:
 
+	addr_size = sizeof their_addr;
+	new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &addr_size);
+
+	// ready to communicate on socket descriptor new_fd!
 	return 0;
 }
 
