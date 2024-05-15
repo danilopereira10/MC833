@@ -62,6 +62,47 @@ int main(void)
 
 
 	connect(sockfd, res->ai_addr, res->ai_addrlen);
+struct addrinfo hints, *res;
+    int sockfd;
+
+    // first, load up address structs with getaddrinfo():
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
+    hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
+
+    getaddrinfo("www.example.com", "3490", &hints, &res);
+
+    // make a socket using the information gleaned from getaddrinfo():
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+
+	connect(sockfd, res->ai_addr, res->ai_addrlen);
+	int op = 0;
+	while (op < 1 && op > 8) {
+		printf("Selecione a operação: \n");
+		printf("1 - Cadastrar uma nova música utilizando um identificador \n");
+		printf("2 - Remover uma música a partir de seu identificador \n");
+		printf("3 - Listar todas as músicas (identificador, título e intérprete) lançadas em um determinado ano \n");
+		printf("4 - Listar todas as músicas (identificador, título e intérprete) em um dado idioma lançadas em um dado ano \n");
+		printf("5 - Listar todas as músicas de um certo tipo \n");
+		printf("6 - Listar todas as informações de uma música dado o seu identificador \n");
+		printf("7 - Listar todas as informações de todas as músicas \n");
+		printf("8 - fazer um download de uma música a partir de seu identificador \n");
+		scanf("%d", &op);
+	}
+	
+	switch (op) {
+		case 6:
+			int temp = htonl(op);
+			send(sockfd, &temp, sizeof temp, 0);
+			break;
+		case 7:
+			break;
+	}
+	
+	
+	
 
 	return 0;
 }
