@@ -50,8 +50,9 @@ int main(void)
 
 	struct addrinfo hints, *res;
 	int sockfd;
-	char buf[512];
-	int byte_count;
+	char buf[1024];
+	char bufout[1024];
+	int n;
 
 	// get host info, make socket, and connect it
 	memset(&hints, 0, sizeof hints);
@@ -62,8 +63,50 @@ int main(void)
 	connect(sockfd, res->ai_addr, res->ai_addrlen);
 
 	// all right! now that we're connected, we can receive some data!
-	byte_count = recv(sockfd, buf, sizeof buf, 0);
-	printf("recv()'d %d bytes of data in buf\n", byte_count);
+	int total = 0;
+	int bytesleft = 1024, len = 1024;
+	int j = 0;
+	while (1) {
+		int c = 0;
+		int f = 0;
+		while (1) {
+			n = recv(sockfd, buf+total, sizeof buf - bytesleft, 0);
+			printf("recv()'d %d bytes of data in buf\n", n);
+			if (n == -1) { break; }
+			if (n == 0) {
+			} else {
+				total += n;
+				bytesleft -= n;
+				while (j < total) {
+					if ((buf[j] == '\0')) {
+						total = 0;
+						bytesleft = 1024;
+						c++;
+					}
+					j++;
+					if (c && buf[0] != '4') {
+						f = 1;
+						break;
+					} else if (c == 2) {
+						f = 1;
+						break;
+					}
+				}
+			}
+			if (f) {
+				break;
+			}
+		}
+
+		FILE *fptr;
+		fptr = fopen("musicas", "r");
+		fgets(bufout, 1024, fptr);
+		if (buf[0] == '7') {
+			
+		}
+		fclose(fptr);	
+	}
+	
 
 	
 	return 0;
