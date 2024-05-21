@@ -72,10 +72,12 @@ int main(void)
 	char buf[1024];
 	char bufout[4096];
 	int n;
+    socklen_t addr_size;
+    struct sockaddr_storage their_addr;
 
 	// get host info, make socket, and connect it
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+	hints.ai_family = AF_INET;  // use IPv4 or IPv6, whichever
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 	// getaddrinfo("www.example.com", "3490", &hints, &res);
@@ -86,7 +88,7 @@ int main(void)
     int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
     int total = 0;
     int bytesleft = 1024; 
-    int n = recv(new_fd, buf+total, bytesleft)
+    n = recv(new_fd, buf+total, bytesleft, 0);
 
 	
 		

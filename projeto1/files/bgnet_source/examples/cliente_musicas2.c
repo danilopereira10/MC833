@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     // first, load up address structs with getaddrinfo():
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET6;     // AF_INET, AF_INET6, or AF_UNSPEC
+    hints.ai_family = AF_INET;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
 	hints.ai_flags = AI_PASSIVE;
 
@@ -194,6 +194,7 @@ int main(int argc, char* argv[]) {
 					printf("erro n=-1 no envio op 7 \n");
 					break;
 				}
+                printf("enviados %d bytess \n", n);
 				total += n;
 				bytesleft -= n;
 			}
