@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     // first, load up address structs with getaddrinfo():
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
+    hints.ai_family = AF_INET6;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
 
     // getaddrinfo("www.example.com", "3490", &hints, &res);
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 	int dsockfd;
 	struct addrinfo dhints, *dservinfo, *dp;
 	int drv;
-	int dnumbytes;
+	// int dnumbytes;
 
 	memset(&dhints, 0, sizeof dhints);
 	dhints.ai_family = AF_INET6;
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 	
 	while (1) {
 		int op = 0;
-		while (op < 1 && op > 9) {
+		while (op < 1 || op > 9) {
 			printf("Selecione a operação: \n");
 			printf("1 - Cadastrar uma nova música utilizando um identificador \n");
 			printf("2 - Remover uma música a partir de seu identificador \n");
@@ -138,13 +138,13 @@ int main(int argc, char* argv[]) {
 				i++;
 			}
 			char* content2 = NULL;
-			int f2 = 0;
+			// int f2 = 0;
 			if (op == 4) {
 				buffer[i+1] = '\0';
 				i++;
 				printf("Digite o ano: \n");
 				scanf("%ms", &content2);
-				f2 = 1;
+				// f2 = 1;
 			}
 			
 			int j = 0;
