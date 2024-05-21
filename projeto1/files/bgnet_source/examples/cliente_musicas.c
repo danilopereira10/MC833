@@ -86,12 +86,14 @@ int main(int argc, char* argv[]) {
 		buffer[0] = '0' + op;
 		if ((op!= 7)) {
 			char* content = NULL;
-			if ((op == 1) || (op == 2) || (op == 6) || (op == 8)) {
+			if ((op == 2) || (op == 6) || (op == 8)) {
 				printf("Digite o identificador: \n");
 			} else if (op == 3) {
 				printf("Digite o ano: \n");
 			} else if (op == 4) {
 				printf("Digite o idioma: \n");
+			} else if (op == 1) {
+				printf("Coloque todas as informações da música: \n");
 			} else {
 				printf("Digite o tipo: \n");
 			}
