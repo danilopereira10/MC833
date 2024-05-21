@@ -85,10 +85,20 @@ int main(void)
 	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	bind(sockfd, res->ai_addr, res->ai_addrlen);
 	listen(sockfd, 10);
-    int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
-    int total = 0;
-    int bytesleft = 1024; 
-    n = recv(new_fd, buf+total, bytesleft, 0);
+    while(1) {
+        int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
+        pid_t pid;
+        if ((pid = fork()) == 0) {
+            close(sockfd);
+            int total = 0;
+            int bytesleft = 1024; 
+            n = recv(new_fd, buf+total, bytesleft, 0);
+            close(new_fd);
+            exit(0);
+        }
+        close(new_fd);
+    }
+    
 
 	
 		
