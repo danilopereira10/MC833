@@ -53,9 +53,10 @@ int main(int argc, char* argv[]) {
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET6;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
+	hints.ai_flags = AI_PASSIVE;
 
     // getaddrinfo("www.example.com", "3490", &hints, &res);
-	getaddrinfo(NULL, "3490", &hints, &res);
+	getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res);
 
 
 	int dsockfd;
