@@ -17,6 +17,7 @@
 
 
 #define PORT "3490"  // the port users will be connecting to
+#define PORT2 "3491"
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
@@ -32,7 +33,7 @@ void sigchld_handler(int s)
 	errno = saved_errno;
 }
 
-
+#define MAXBUFLEN 100
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -47,14 +48,46 @@ void *get_in_addr(struct sockaddr *sa)
 int main(int argc, char* argv[]) {
 	struct addrinfo hints, *res;
     int sockfd;
-
     // first, load up address structs with getaddrinfo():
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
 
-    getaddrinfo("www.example.com", "3490", &hints, &res);
+    // getaddrinfo("www.example.com", "3490", &hints, &res);
+	getaddrinfo(NULL, "3490", &hints, &res);
+
+
+	int dsockfd;
+	struct addrinfo dhints, *dservinfo, *dp;
+	int drv;
+	int dnumbytes;
+
+	memset(&dhints, 0, sizeof dhints);
+	dhints.ai_family = AF_INET6;
+	dhints.ai_socktype = SOCK_DGRAM;
+
+	if ((drv = getaddrinfo(NULL, PORT2, &dhints, &dservinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(drv));
+		return 1;
+	}
+
+	for (dp = dservinfo; dp != NULL; dp = dp->ai_next) {
+		if ((dsockfd = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+		break;
+	}
+
+	if (dp == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return 2;
+	}
+
+	
+
+	
 
     // make a socket using the information gleaned from getaddrinfo():
     sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -80,7 +113,7 @@ int main(int argc, char* argv[]) {
 		if (op == 9) {
 			break;
 		}
-		int op = atoi(argv[1]); 
+		// int op = atoi(argv[1]); 
 		int i = 0;
 		char buffer[1024];
 		buffer[0] = '0' + op;
@@ -126,13 +159,43 @@ int main(int argc, char* argv[]) {
 			int total = 0;
 			int bytesleft = i + 1, len = i + 1;
 			int n;
+			if (op != 8) {
+				while (total < len) {
+					n  = send(sockfd, buffer+total, bytesleft, 0);
+					if (n == -1) {
+						printf("erro: n=-1 no op entre 1 e 6\n"); 
+						break; }
+					total += n;
+					bytesleft -= n;
+				}
+			} else {
+				while (total < len) {
+					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);
+					if (n == -1) {
+						printf("erro n=-1 no op 8");
+						break;
+					}
+					total += n;
+					bytesleft -= n;
+				}
+			}
+			
+		} else {
+			buffer[0] = '7';
+			buffer[1] = '\0';
+			int total = 0;
+			int bytesleft = 2;
+			int len = 2;
+			int n;
 			while (total < len) {
-				n  = send(sockfd, buffer+total, bytesleft, 0);
-				if (n == -1) { break; }
+				n = send(sockfd, buffer+total, bytesleft, 0);
+				if (n == -1) {
+					printf("erro n=-1 no envio op 7 \n");
+					break;
+				}
 				total += n;
 				bytesleft -= n;
 			}
-			
 		}
 	}
 

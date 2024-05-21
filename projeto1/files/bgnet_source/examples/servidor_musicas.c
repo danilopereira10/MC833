@@ -62,6 +62,7 @@ int startsWith2(const char *a, const char *b) {
 }
 
 #define MYPORT "3490"
+#define MAXBUFLEN 100
 int main(void)
 {
 	// stream sockets and recv()
@@ -79,6 +80,20 @@ int main(void)
 	getaddrinfo("www.example.com", "3490", &hints, &res);
 	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	connect(sockfd, res->ai_addr, res->ai_addrlen);
+
+	int dgram_socket;
+	struct addrinfo dhints, *dservinfo, *pd;
+	int drv;
+	int dnumbytes;
+	struct sockaddr_storage dtheir_addr;
+	char dbuf[MAXBUFLEN];
+	socklen_t daddr_len;
+	char ds[INET6_ADDRSTRLEN];
+
+	memset(&dhints, 0, sizeof dhints);
+	dhints.ai_family = AF_INET6;
+	dhints.ai_socktype = SOCK_DGRAM;
+	dhints.ai_flags = AI_PASSIVE;
 
 	// all right! now that we're connected, we can receive some data!
 	int total = 0;
@@ -380,7 +395,7 @@ int main(void)
 				bufout[0] = '\0';
 			}
 			fclose(fptr);
-			fptr = fopen("musicas", 'w');
+			fptr = fopen("musicas", "w");
 			fputs(bufout, fptr);
 		}  else if (buf[0] == '1') {
 			char con[1024];
@@ -441,7 +456,7 @@ int main(void)
 					bufout[0] = '\0';
 				}
 				fclose(fptr);
-				fptr = fopen("musicas", 'w');
+				fptr = fopen("musicas", "w");
 				fputs(bufout, fptr);
 			}
 			
@@ -463,7 +478,7 @@ int main(void)
 			int i3 = 0, i4 = 0, pi3 = 0;
 			snprintf(idc2, 1024, "%d.mp3", id);
 
-			FILE* fptr2 = fopen(idc2);
+			FILE* fptr2 = fopen(idc2, "r");
 			int c2 = 0;
 			while ((read = getline(&line, &len, fptr)) != -1) {
 				if (startsWith2(line, "Identificador único:")) {
