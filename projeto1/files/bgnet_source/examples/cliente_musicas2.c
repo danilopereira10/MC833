@@ -53,11 +53,14 @@ int main(int argc, char* argv[]) {
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
-	hints.ai_flags = AI_PASSIVE;
+
 
     // getaddrinfo("www.example.com", "3490", &hints, &res);
     int rv;
-	if ((rv = getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res)) != 0) {
+	// if ((rv = getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res)) != 0) {
+    //     fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
+    // }
+    if ((rv = getaddrinfo("143.106.16.242", "3490", &hints, &res)) != 0) {
         fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     }
 
@@ -74,7 +77,7 @@ int main(int argc, char* argv[]) {
 	int dsockfd;
 	struct addrinfo dhints, *dservinfo, *dp;
 	int drv;
-	// int dnumbytes;
+	int dnumbytes;
 
 	memset(&dhints, 0, sizeof dhints);
 	dhints.ai_family = AF_INET6;
@@ -106,7 +109,7 @@ int main(int argc, char* argv[]) {
     // sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
 
-	connect(sockfd, res->ai_addr, res->ai_addrlen);
+	connect(sockfd, p->ai_addr, p->ai_addrlen);
 	
 	while (1) {
 		int op = 0;
