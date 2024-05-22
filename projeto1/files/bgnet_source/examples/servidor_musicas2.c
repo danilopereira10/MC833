@@ -77,7 +77,7 @@ int main(void)
 
 	// get host info, make socket, and connect it
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET;  // use IPv4 or IPv6, whichever
+	hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
@@ -107,6 +107,51 @@ int main(void)
     addr_size = sizeof their_addr;
 	// int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	// n = recv(new_fd, buf, 1024, 0);
+
+	int dsockfd;
+	struct addrinfo dhints, *dservinfo, *dp;
+	int drv;
+	int dnumbytes;
+	struct sockaddr_storage dtheir_addr;
+	// char dbuf[MAXBUFLEN];
+	socklen_t daddr_len;
+	char ds[INET6_ADDRSTRLEN];
+
+	memset(&dhints, 0, sizeof dhints);
+	dhints.ai_family = AF_INET6;
+	dhints.ai_socktype = SOCK_DGRAM;
+	dhints.ai_flags = AI_PASSIVE;
+
+	if ((drv = getaddrinfo(NULL, "4285", &dhints, &dservinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(drv));
+		return 1;
+	}
+
+	for (dp = dservinfo; dp != NULL; dp=dp->ai_next) {
+		if ((dsockfd = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
+			perror("listener: socket");
+			continue;
+		}
+
+		if ((bind(dsockfd, dp->ai_addr, dp->ai_addrlen)) == -1) {
+			close(dsockfd);
+			perror("listener: bind");
+			continue;
+		}
+		break;
+	}
+
+	if (dp == NULL) {
+		fprintf(stderr, "listener: failed to bind socket \n");
+		return 2;
+	}
+	freeaddrinfo(dservinfo);
+	
+	daddr_len = sizeof dtheir_addr;
+
+
+
+	// all right! now that we're connected, we can receive some data!
     while(1) {
         int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 		printf("Recebida conexão \n");
@@ -114,21 +159,7 @@ int main(void)
 		{
         // if ((pid = fork()) == 0) {
             // close(sockfd);
-            int dgram_socket;
-			// struct addrinfo dhints, *dservinfo, *pd;
-			// int drv;
-			// int dnumbytes;
-			// struct sockaddr_storage dtheir_addr;
-			// char dbuf[MAXBUFLEN];
-			// socklen_t daddr_len;
-			// char ds[INET6_ADDRSTRLEN];
-
-			// memset(&dhints, 0, sizeof dhints);
-			// dhints.ai_family = AF_INET6;
-			// dhints.ai_socktype = SOCK_DGRAM;
-			// dhints.ai_flags = AI_PASSIVE;
-
-			// all right! now that we're connected, we can receive some data!
+            
 			
 			while (1) {
 				int total = 0;
@@ -170,7 +201,7 @@ int main(void)
 					}
 				}
 				if (f2) {
-					continue;
+					break;
 				}
 
 				FILE *fptr;
@@ -283,7 +314,7 @@ int main(void)
 							c2 = startsWith(line, tipo2);
 						}
 						
-						if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+						if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
 							i4 = 0;
 							while (line[i4] != '\0') {
 								buf2[i3] = line[i4];

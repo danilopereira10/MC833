@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     // first, load up address structs with getaddrinfo():
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;     // AF_INET, AF_INET6, or AF_UNSPEC
+    hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
 
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	// if ((rv = getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res)) != 0) {
     //     fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     // }
-    if ((rv = getaddrinfo("clash.lab.ic.unicamp.br", "4284", &hints, &res)) != 0) {
+    if ((rv = getaddrinfo("dostoevsky.lab.ic.unicamp.br", "4284", &hints, &res)) != 0) {
         fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     }
 
