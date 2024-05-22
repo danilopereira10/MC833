@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 	char* serverip = argv[1];
 	char* porttcp = argv[2];
 	char* portudp = argv[3];
-	char* clientudpport = argv[4];
+	// char* clientudpport = argv[4];
 
 	struct addrinfo hints, *res;
     int sockfd;

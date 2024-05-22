@@ -18,6 +18,7 @@
 #include <sys/fcntl.h>
 
 
+
 #define PORT "3490"  // the port users will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
@@ -45,6 +46,13 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+int min(int a, int b) {
+	if (a < b) {
+		return a;
+	}
+	return b;
+}
+
 int startsWith(const char *a, const char *b) {
 	if (strlen(a) == strlen(b)) {
 		if (strncmp(a,b, strlen(b)) == 0) {
@@ -65,7 +73,7 @@ int startsWith2(const char *a, const char *b) {
 
 #define MYPORT "3490"
 #define MAXBUFLEN 100
-int main(void)
+int main(int argc, char* argv[])
 {
 	// stream sockets and recv()
 
@@ -89,8 +97,9 @@ int main(void)
     // if ((rv = getaddrinfo(NULL, "3490", &hints, &res)) != 0 ) {
     //     fprintf(stderr, "getaddrinfo tcp: %s \n", gai_strerror(rv));
     // }
-
-    if ((rv = getaddrinfo(NULL, "4284", &hints, &res)) != 0 ) {
+	char* porttcp = argv[1];
+	char* portudp = argv[2];
+    if ((rv = getaddrinfo(NULL, argv[1], &hints, &res)) != 0 ) {
         fprintf(stderr, "getaddrinfo tcp: %s \n", gai_strerror(rv));
     }
 
@@ -103,6 +112,10 @@ int main(void)
         break;
     }
     
+	int yes = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+		printf("erro no setsockopt \n");
+	}
 	bind(sockfd, p->ai_addr, p->ai_addrlen);
 	listen(sockfd, 10);
     socklen_t addr_size;
@@ -124,15 +137,20 @@ int main(void)
 	dhints.ai_socktype = SOCK_DGRAM;
 	dhints.ai_flags = AI_PASSIVE;
 
-	if ((drv = getaddrinfo(NULL, "4285", &dhints, &dservinfo)) != 0) {
+	if ((drv = getaddrinfo(NULL, argv[2], &dhints, &dservinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(drv));
 		return 1;
 	}
 
+	
 	for (dp = dservinfo; dp != NULL; dp=dp->ai_next) {
 		if ((dsockfd = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
 			perror("listener: socket");
 			continue;
+		}
+		int yes2 = 1;
+		if (setsockopt(dsockfd, SOL_SOCKET, SO_REUSEADDR, &yes2, sizeof yes2) == -1) {
+			printf("erro no setsockopt 2\n");
 		}
 
 		if ((bind(dsockfd, dp->ai_addr, dp->ai_addrlen)) == -1) {
@@ -162,19 +180,34 @@ int main(void)
 	tv.tv_usec = 0;
 	// fcntl(sockfd, F_SETFL, O_NONBLOCK);
 	fcntl(dsockfd, F_SETFL, O_NONBLOCK);
+
 	int i4 = 0;
 	buf[0] = '\0';
 	buf[1] = '\0';
+
+
+	int bytesleft = 1024;
+	int total = 0;
+	int i5 = 0;
+
+	int id;
+	char idc[1024];
+	int i2 = 1;
 	while (1) {
 		drv = select(n2, &readfds, NULL, NULL, &tv);
 		if (drv == -1) {
 			perror("select");
+			total = 0;
+			bytesleft = 1024;
+			i5 = 0;
+			i2 = 1;
 		} else if (drv == 0) {
 			//printf("Timeout occurred! No data after 1 second. \n");
 		} else {
 			if (FD_ISSET(sockfd, &readfds)) {
 				while(1) {
 					int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
+					break;
 					printf("Recebida conexão \n");
 					// pid_t pid;
 					{
@@ -630,7 +663,68 @@ int main(void)
 					// close(new_fd);
 				}
 			} else {
+				
 
+				n = recvfrom(dsockfd, buf, bytesleft+total, 0, ((struct sockaddr *)&dtheir_addr), &daddr_len);
+				total += n;
+				bytesleft -= n;
+				while (i5 < total) {
+					if (buf[i5] == '\0') {
+						while (buf[i2] != '\0') {
+							idc[i2-1] = buf[i2];
+							i2++;
+						}
+						idc[i2-1] = buf[i2];
+						id = atoi(idc);
+						
+
+						char buf2[1024];
+
+						FILE *fptr;
+						fptr = fopen(("%d.mp3", id), "r");
+						if (fptr != NULL) {
+							// fgets(bufout, 4096, fptr);
+							long size;
+							char* line = NULL;
+							int len = 0;
+							ssize_t read;
+
+							fseek(fptr, 0, SEEK_END);
+							size = ftell(fptr);
+							char bufout2[size+1];
+							fseek(fptr, 0, SEEK_SET);
+							rewind(fptr);
+							fread(bufout2, 1, size, fptr);
+							int total = 0;
+							
+							int n;
+							bufout2[size] = '\0';
+							len = size+1;
+							int bytesleft = len;
+							
+							int rate = 60;
+							while (total < len) {
+								if ((n = sendto(dsockfd, bufout2+total, min(bytesleft,rate), 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
+									printf("Erro no envio n=-1 op8 \n");
+									break;
+								}
+								printf("Enviados %d bytes \n", n);
+								total += n;
+								bytesleft -= n;
+							}
+							
+						}
+						//sendto();
+						total = 0;
+						bytesleft = 1024;
+						buf[0] = '\0';
+						buf[1] = '\0';
+						i5 = 0;
+						i2 = 1;
+						break;
+					}
+					i5++;
+				}
 			}
 		}
 
