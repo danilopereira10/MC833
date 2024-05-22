@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     // first, load up address structs with getaddrinfo():
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
+    hints.ai_family = AF_INET;     // AF_INET, AF_INET6, or AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
 
 
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	// if ((rv = getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res)) != 0) {
     //     fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     // }
-    if ((rv = getaddrinfo("143.106.16.242", "3490", &hints, &res)) != 0) {
+    if ((rv = getaddrinfo("clash.lab.ic.unicamp.br", "4284", &hints, &res)) != 0) {
         fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     }
 
@@ -161,14 +161,16 @@ int main(int argc, char* argv[]) {
 				printf("Digite o ano: \n");
 				scanf("%ms", &content2);
 				// f2 = 1;
+
+				int j = 0;
+				while (content2[j] != '\0') {
+					buffer[i+1] = content2[j];
+					i++;
+					j++;
+				}
 			}
 			
-			int j = 0;
-			while (content2[j] != '\0') {
-				buffer[i+1] = content2[j];
-				i++;
-				j++;
-			}
+			
 
 			i++;
 			buffer[i] = '\0';
@@ -184,6 +186,31 @@ int main(int argc, char* argv[]) {
 					total += n;
 					bytesleft -= n;
 				}
+				char bufin[4096];
+				bufin[0] = '\0';
+				total = 0;
+				bytesleft = 4096;
+				int j = 0;
+				int f2 = 0;
+				while (total < 4096) {
+					n = recv(sockfd, bufin+total, bytesleft, 0);
+					if (n == 0) {
+						break;
+					}
+					total += n;
+					bytesleft -= n;
+					while (j < total) {
+						if (bufin[j] == '\0') {
+							f2 = 1;
+							break;
+						}
+						j++;
+					}
+					if (f2) {
+						break;
+					}
+				}
+				printf(bufin);
 			} else {
 				while (total < len) {
 					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);
@@ -214,21 +241,27 @@ int main(int argc, char* argv[]) {
 				bytesleft -= n;
 			}
             char bufin[4096];
+			bufin[0] = '\0';
             total = 0;
             bytesleft = 4096;
             int j = 0;
+			int f2 = 0;
             while (total < 4096) {
                 n = recv(sockfd, bufin+total, bytesleft, 0);
                 total += n;
                 bytesleft -= n;
                 while (j < total) {
                     if (bufin[j] == '\0') {
+						f2 = 1;
                         break;
                     }
                     j++;
                  }
+				 if (f2) {
+					break;
+				 }
             }
-            
+            printf(bufin);
             
 		}
 	}

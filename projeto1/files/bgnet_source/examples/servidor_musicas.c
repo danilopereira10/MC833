@@ -116,7 +116,7 @@ int main(void)
 				int f = 0;
 				int f2 = 0;
 				while (1) {
-					n = recv(new_fd, buf+total, sizeof buf - bytesleft, 0);
+					n = recv(new_fd, buf+total, bytesleft, 0);
 					printf("recv()'d %d bytes of data in buf\n", n);
 					if ((n == -1)) { 
 						exit(1);  
