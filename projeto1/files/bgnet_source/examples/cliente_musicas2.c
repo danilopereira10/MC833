@@ -46,6 +46,11 @@ void *get_in_addr(struct sockaddr *sa)
 
 #define MYPORT "3490"
 int main(int argc, char* argv[]) {
+	char* serverip = argv[1];
+	char* porttcp = argv[2];
+	char* portudp = argv[3];
+	char* clientudpport = argv[4];
+
 	struct addrinfo hints, *res;
     int sockfd;
     // first, load up address structs with getaddrinfo():
@@ -60,7 +65,7 @@ int main(int argc, char* argv[]) {
 	// if ((rv = getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res)) != 0) {
     //     fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     // }
-    if ((rv = getaddrinfo("dostoevsky.lab.ic.unicamp.br", "4284", &hints, &res)) != 0) {
+    if ((rv = getaddrinfo(serverip, porttcp, &hints, &res)) != 0) {
         fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     }
 
@@ -80,10 +85,10 @@ int main(int argc, char* argv[]) {
 	int dnumbytes;
 
 	memset(&dhints, 0, sizeof dhints);
-	dhints.ai_family = AF_INET6;
+	dhints.ai_family = AF_UNSPEC;
 	dhints.ai_socktype = SOCK_DGRAM;
 
-	if ((drv = getaddrinfo(NULL, PORT2, &dhints, &dservinfo)) != 0) {
+	if ((drv = getaddrinfo(serverip, portudp, &dhints, &dservinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(drv));
 		return 1;
 	}
@@ -101,7 +106,42 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	
+	int dcsockfd;
+	struct addrinfo dchints, *dcservinfo, *dcp;
+	int dcrv;
+	int dcnumbytes;
+	struct sockaddr_storage dctheir_addr;
+	socklen_t dcaddr_len;
+
+
+	memset(&dchints, 0, sizeof dchints);
+	dchints.ai_family = AF_UNSPEC;
+	dchints.ai_socktype = SOCK_DGRAM;
+	dchints.ai_flags = AI_PASSIVE;
+
+	if ((dcrv = getaddrinfo(serverip, portudp, &dchints, &dcservinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(dcrv));
+		return 1;
+	}
+
+	for (dcp = dcservinfo; dcp != NULL; dcp = dcp->ai_next) {
+		if ((dcsockfd = socket(dcp->ai_family, dcp->ai_socktype, dcp->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+
+		if ((bind(dcsockfd, dcp->ai_addr, dcp->ai_addrlen)) == -1) {
+			close(dcsockfd);
+			perror("listener: bind");
+			continue;
+		}
+		break;
+	}
+
+	if (dcp == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return 2;
+	}
 
 	
 
@@ -212,6 +252,14 @@ int main(int argc, char* argv[]) {
 				}
 				printf(bufin);
 			} else {
+				int i4 = 0;
+				i++;
+				while (serverip[i4] != '\0') {
+					buffer[i] = serverip[i4];
+					i++;
+				}
+				buffer[i] = '\0';
+
 				while (total < len) {
 					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);
 					if (n == -1) {

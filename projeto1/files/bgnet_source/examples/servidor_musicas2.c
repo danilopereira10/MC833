@@ -160,17 +160,475 @@ int main(void)
 	int n2 = dsockfd + 1;
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
-	fcntl(sockfd, F_SETFL, O_NONBLOCK);
+	// fcntl(sockfd, F_SETFL, O_NONBLOCK);
 	fcntl(dsockfd, F_SETFL, O_NONBLOCK);
+	int i4 = 0;
+	buf[0] = '\0';
+	buf[1] = '\0';
 	while (1) {
-	drv = select(n2, &readfds, NULL, NULL, &tv);
+		drv = select(n2, &readfds, NULL, NULL, &tv);
 		if (drv == -1) {
 			perror("select");
 		} else if (drv == 0) {
 			//printf("Timeout occurred! No data after 1 second. \n");
 		} else {
 			if (FD_ISSET(sockfd, &readfds)) {
-				// recv(sockfd, )
+				while(1) {
+					int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
+					printf("Recebida conexão \n");
+					// pid_t pid;
+					{
+					// if ((pid = fork()) == 0) {
+						// close(sockfd);
+						
+						
+						while (1) {
+							int total = 0;
+							int bytesleft = 1024; 
+							size_t len = 1024;
+							int j = 0;
+							int c = 0;
+							int f = 0;
+							int f2 = 0;
+							while (1) {
+								n = recv(new_fd, buf+total, bytesleft, 0);
+								printf("recv()'d %d bytes of data in buf\n", n);
+								if ((n == -1)) { 
+									// exit(1);  
+								} else if (n == 0) {
+									f2 = 1;
+									break;
+								} else {
+									total += n;
+									bytesleft -= n;
+									while (j < total) {
+										if ((buf[j] == '\0')) {
+											total = 0;
+											bytesleft = 1024;
+											c++;
+										}
+										j++;
+										if (c && buf[0] != '4') {
+											f = 1;
+											break;
+										} else if (c == 2) {
+											f = 1;
+											break;
+										}
+									}
+								}
+								if (f || f2) {
+									break;
+								}
+							}
+							if (f2) {
+								break;
+							}
+
+							FILE *fptr;
+							fptr = fopen("musicas", "r");;
+							// fgets(bufout, 4096, fptr);
+							long size;
+							char* line = NULL;
+							len = 0;
+							ssize_t read;
+							if (buf[0] == '7') {
+								fseek(fptr, 0, SEEK_END);
+								size = ftell(fptr);
+								fseek(fptr, 0, SEEK_SET);
+								rewind(fptr);
+								fread(bufout, 1, size, fptr);
+								int total = 0;
+								
+								int n;
+								bufout[size] = '\0';
+								int len = size+1;
+								int bytesleft = len;
+								
+								while (total < len) {
+									if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
+										printf("Erro no envio n=-1 op7 \n");
+									}
+									printf("Enviados %d bytes \n", n);
+									total += n;
+									bytesleft -= n;
+								}
+							} else if (buf[0] == '6') {
+								int id;
+								char idc[1024];
+								int i2 = 1;
+								while (buf[i2] != '\0') {
+									idc[i2-1] = buf[i2];
+									i2++;
+								}
+								idc[i2-1] = buf[i2];
+								id = atoi(idc);
+								char idc2[1024];
+								char buf2[1024];
+								int i3 = 0, i4 = 0, pi3 = 0;
+								snprintf(idc2, 1024, "Identificador Único: %d\n", id);
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									printf(line);
+									if (startsWith2(line, "Identificador Único:")) {
+										if (c2) {
+											pi3 = i3;
+											break;
+											
+										}
+										i3 = pi3;
+										c2 = startsWith(line, idc2);
+									}
+									
+									i4 = 0;
+									while (line[i4] != '\0') {
+										buf2[i3] = line[i4];
+										i3++;
+										i4++;
+									}	
+								}
+								buf2[i3] = '\0'; 
+								int i5 = 0;
+								while (i5 < i3) {
+									bufout[i5] = buf2[i5];
+									i5++;
+								}
+								if (i5 == 0) {
+									bufout[0] = '\0';
+								}
+								
+								int n;
+								bufout[i3] = '\0';
+								int len = i3+1;
+								int bytesleft = len;
+								
+								while (total < len) {
+									if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
+										printf("Erro no envio n=-1 op7 \n");
+									}
+									printf("Enviados %d bytes \n", n);
+									total += n;
+									bytesleft -= n;
+								}
+
+							} else if (buf[0] == '5') {
+								
+								char tipo[1024];
+								int i2 = 1;
+								while (buf[i2] != '\0') {
+									tipo[i2-1] = buf[i2];
+									i2++;
+								}
+								tipo[i2-1] = buf[i2];
+								
+								char tipo2[1024];
+								char buf2[1024];
+								int i3 = 0, i4 = 0, pi3 = 0;
+								snprintf(tipo2, 1024, "Tipo de música: %s", tipo);
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									if (startsWith2(line, "Tipo de música:")) {
+										if (c2) {
+											pi3 = i3;
+										}
+										i3 = pi3;
+										c2 = startsWith(line, tipo2);
+									}
+									
+									if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+										i4 = 0;
+										while (line[i4] != '\0') {
+											buf2[i3] = line[i4];
+											i3++;
+											i4++;
+										}
+									}	
+								}
+								buf2[i3] = '\0'; 
+								int i5 = 0;
+								if (i3) {
+									while (i5 < i3) {
+										bufout[i5] = buf2[i5];
+										i5++;
+									}
+								} else {
+									bufout[0] = '\0';
+								}
+							} else if (buf[0] == '4') {
+								
+								char ano[1024];
+								int i2 = 1;
+								while (buf[i2] != '\0') {
+									ano[i2-1] = buf[i2];
+									i2++;
+								}
+								ano[i2-1] = buf[i2];
+								
+								char ano2[1024];
+								char buf2[1024];
+								int i3 = 0, i4 = 0, pi3 = 0;
+								int anoint = atoi(ano);
+								snprintf(ano2, 1024, "Ano de lançamento: %d", anoint);
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									if (startsWith2(line, "Ano de lançamento:")) {
+										if (c2) {
+											pi3 = i3;
+										}
+										i3 = pi3;
+										c2 = startsWith(line, ano2);
+									}
+									
+
+									if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+										i4 = 0;
+										while (line[i4] != '\0') {
+											buf2[i3] = line[i4];
+											i3++;
+											i4++;
+										}
+									}	
+								}
+								buf2[i3] = '\0'; 
+								int i5 = 0;
+								if (i3) {
+									while (i5 < i3) {
+										bufout[i5] = buf2[i5];
+										i5++;
+									}
+								} else {
+									bufout[0] = '\0';
+								}
+							} else if (buf[0] == '3') {
+								
+								char ano[1024];
+								char idioma[1024];
+								int i2 = 1;
+								int i3 = 0, i4 = 0;
+								while (buf[i2] != '\0') {
+									idioma[i3] = buf[i2];
+									i2++;
+									i3++;
+								}
+								idioma[i3] = buf[i2];
+								i2++;
+
+								while (buf[i2] != '\0') {
+									ano[i4] = buf[i2];
+									i2++;
+									i4++;
+								}
+								ano[i4] = buf[i2];
+								
+								char ano2[1024];
+								char idioma2[1024];
+								char buf2[1024];
+								i3 = 0, i4 = 0;
+								int pi3 = 0;
+								int anoint = atoi(ano);
+								snprintf(ano2, 1024, "Ano de lançamento: %d", anoint);
+								snprintf(idioma2, 1024, "Idioma: %s", idioma);
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									if (startsWith2(line, "Idioma:")) {
+										c2 = 0;
+										if (startsWith(line, idioma2)) {
+											c2++;
+										}
+									} else if (startsWith2(line, "Ano de lançamento:")) {	
+										if (startsWith(line, ano2) && c2) {
+											c2++;
+										} else {
+											c2 = 0;
+										}
+									}
+									if (c2 == 2) {
+										pi3 = i3;
+									} else {
+										i3 = pi3;
+									}
+
+									if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+										i4 = 0;
+										while (line[i4] != '\0') {
+											buf2[i3] = line[i4];
+											i3++;
+											i4++;
+										}
+									}	
+								}
+								buf2[i3] = '\0'; 
+								int i5 = 0;
+								if (i3) {
+									while (i5 < i3) {
+										bufout[i5] = buf2[i5];
+										i5++;
+									}
+								} else {
+									bufout[0] = '\0';
+								}
+							} else if (buf[0] == '2') {
+								int id;
+								char idc[1024];
+								int i2 = 1;
+								while (buf[i2] != '\0') {
+									idc[i2-1] = buf[i2];
+									i2++;
+								}
+								idc[i2-1] = buf[i2];
+								id = atoi(idc);
+								char idc2[1024];
+								char buf2[4096];
+								int i3 = 0, i4 = 0, pi3 = 0;
+								snprintf(idc2, 1024, "Identificador único: %d\n", id);
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									
+									if (startsWith2(line, "Identificador único:")) {
+										if (c2) {
+											pi3 = i3;
+										}
+										// i3 = pi3;
+										c2 = startsWith(line, idc2);
+									}
+									if (c2) {
+										continue;
+									}
+									
+									i4 = 0;
+									while (line[i4] != '\0') {
+										buf2[i3] = line[i4];
+										i3++;
+										i4++;
+									}	
+								}
+								buf2[i3] = '\0'; 
+								int i5 = 0;
+								if (i3) {
+									while (i5 < i3) {
+										bufout[i5] = buf2[i5];
+										i5++;
+									}
+								} else {
+									bufout[0] = '\0';
+								}
+								fclose(fptr);
+								fptr = fopen("musicas", "w");
+								fputs(bufout, fptr);
+							}  else if (buf[0] == '1') {
+								char con[1024];
+								int id;
+								char idc[1024];
+								int i2 = 1;
+								while (buf[i2] != '\n') {
+									idc[i2-1] = buf[i2];
+									con[i2-1] = buf[i2];
+									i2++;
+								}
+								while (buf[i2] != '\0') {
+									con[i2-1] = buf[i2];
+									i2++;
+								}
+								idc[i2-1] = buf[i2];
+								con[i2-1] = buf[i2];
+								id = atoi(idc);
+
+								char idc2[1024];
+								char buf2[4096];
+								int i3 = 0, i4 = 0, pi3 = 0;
+								snprintf(idc2, 1024, "Identificador único: %d", id);
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									
+									if (startsWith2(line, "Identificador único:")) {
+										c2 = startsWith(line, idc2);
+										if (c2) {
+											break;
+										}
+									}
+									
+									i4 = 0;
+									while (line[i4] != '\0') {
+										buf2[i3] = line[i4];
+										i3++;
+										i4++;
+									}	
+								}
+								if (c2) {
+									//
+								} else {
+									int i5 = 0;
+									while (con[i5] != '\0') {
+										buf2[i3] = con[i5];
+										i3++;
+										i5++;
+									}
+									buf2[i3] = '\0'; 
+									i5 = 0;
+									if (i3) {
+										while (i5 < i3) {
+											bufout[i5] = buf2[i5];
+											i5++;
+										}
+									} else {
+										bufout[0] = '\0';
+									}
+									fclose(fptr);
+									fptr = fopen("musicas", "w");
+									fputs(bufout, fptr);
+								}
+								
+
+								
+								
+							} else {
+								int id;
+								char idc[1024];
+								int i2 = 1;
+								while (buf[i2] != '\0') {
+									idc[i2-1] = buf[i2];
+									i2++;
+								}
+								idc[i2-1] = buf[i2];
+								id = atoi(idc);
+								char idc2[1024];
+								char buf2[1024];
+								int i3 = 0, i4 = 0, pi3 = 0;
+								snprintf(idc2, 1024, "%d.mp3", id);
+
+								FILE* fptr2 = fopen(idc2, "r");
+								int c2 = 0;
+								while ((read = getline(&line, &len, fptr)) != -1) {
+									if (startsWith2(line, "Identificador único:")) {
+										if (c2) {
+											pi3 = i3;
+										}
+										i3 = pi3;
+									}
+									c2 = startsWith(line, idc2);
+									i4 = 0;
+									while (line[i4] != '\0') {
+										buf2[i3] = line[i4];
+										i3++;
+										i4++;
+									}	
+								}
+								buf2[i3] = '\0'; 
+								int i5 = 0;
+								while (i5 < i3) {
+									bufout[i5] = buf2[i5];
+									i5++;
+								}
+							}
+							fclose(fptr);	
+						}
+
+
+						// close(new_fd);
+						// exit(0);
+					}
+					// close(new_fd);
+				}
 			} else {
 
 			}
@@ -183,462 +641,7 @@ int main(void)
 
 
 	// all right! now that we're connected, we can receive some data!
-    while(1) {
-        int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
-		printf("Recebida conexão \n");
-        // pid_t pid;
-		{
-        // if ((pid = fork()) == 0) {
-            // close(sockfd);
-            
-			
-			while (1) {
-				int total = 0;
-				int bytesleft = 1024; 
-				size_t len = 1024;
-				int j = 0;
-				int c = 0;
-				int f = 0;
-				int f2 = 0;
-				while (1) {
-					n = recv(new_fd, buf+total, bytesleft, 0);
-					printf("recv()'d %d bytes of data in buf\n", n);
-					if ((n == -1)) { 
-						// exit(1);  
-					} else if (n == 0) {
-						f2 = 1;
-						break;
-					} else {
-						total += n;
-						bytesleft -= n;
-						while (j < total) {
-							if ((buf[j] == '\0')) {
-								total = 0;
-								bytesleft = 1024;
-								c++;
-							}
-							j++;
-							if (c && buf[0] != '4') {
-								f = 1;
-								break;
-							} else if (c == 2) {
-								f = 1;
-								break;
-							}
-						}
-					}
-					if (f || f2) {
-						break;
-					}
-				}
-				if (f2) {
-					break;
-				}
-
-				FILE *fptr;
-				fptr = fopen("musicas", "r");;
-				// fgets(bufout, 4096, fptr);
-				long size;
-				char* line = NULL;
-				len = 0;
-				ssize_t read;
-				if (buf[0] == '7') {
-					fseek(fptr, 0, SEEK_END);
-					size = ftell(fptr);
-					fseek(fptr, 0, SEEK_SET);
-					rewind(fptr);
-					fread(bufout, 1, size, fptr);
-                    int total = 0;
-                    
-                    int n;
-                    bufout[size] = '\0';
-                    int len = size+1;
-                    int bytesleft = len;
-                    
-                    while (total < len) {
-                        if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
-                            printf("Erro no envio n=-1 op7 \n");
-                        }
-                        printf("Enviados %d bytes \n", n);
-                        total += n;
-                        bytesleft -= n;
-                    }
-				} else if (buf[0] == '6') {
-					int id;
-					char idc[1024];
-					int i2 = 1;
-					while (buf[i2] != '\0') {
-						idc[i2-1] = buf[i2];
-						i2++;
-					}
-					idc[i2-1] = buf[i2];
-					id = atoi(idc);
-					char idc2[1024];
-					char buf2[1024];
-					int i3 = 0, i4 = 0, pi3 = 0;
-					snprintf(idc2, 1024, "Identificador Único: %d\n", id);
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						printf(line);
-						if (startsWith2(line, "Identificador Único:")) {
-							if (c2) {
-								pi3 = i3;
-								break;
-								
-							}
-							i3 = pi3;
-							c2 = startsWith(line, idc2);
-						}
-						
-						i4 = 0;
-						while (line[i4] != '\0') {
-							buf2[i3] = line[i4];
-							i3++;
-							i4++;
-						}	
-					}
-					buf2[i3] = '\0'; 
-					int i5 = 0;
-					while (i5 < i3) {
-						bufout[i5] = buf2[i5];
-						i5++;
-					}
-					if (i5 == 0) {
-						bufout[0] = '\0';
-					}
-					
-					int n;
-                    bufout[i3] = '\0';
-                    int len = i3+1;
-                    int bytesleft = len;
-                    
-                    while (total < len) {
-                        if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
-                            printf("Erro no envio n=-1 op7 \n");
-                        }
-                        printf("Enviados %d bytes \n", n);
-                        total += n;
-                        bytesleft -= n;
-                    }
-
-				} else if (buf[0] == '5') {
-					
-					char tipo[1024];
-					int i2 = 1;
-					while (buf[i2] != '\0') {
-						tipo[i2-1] = buf[i2];
-						i2++;
-					}
-					tipo[i2-1] = buf[i2];
-					
-					char tipo2[1024];
-					char buf2[1024];
-					int i3 = 0, i4 = 0, pi3 = 0;
-					snprintf(tipo2, 1024, "Tipo de música: %s", tipo);
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						if (startsWith2(line, "Tipo de música:")) {
-							if (c2) {
-								pi3 = i3;
-							}
-							i3 = pi3;
-							c2 = startsWith(line, tipo2);
-						}
-						
-						if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
-							i4 = 0;
-							while (line[i4] != '\0') {
-								buf2[i3] = line[i4];
-								i3++;
-								i4++;
-							}
-						}	
-					}
-					buf2[i3] = '\0'; 
-					int i5 = 0;
-					if (i3) {
-						while (i5 < i3) {
-							bufout[i5] = buf2[i5];
-							i5++;
-						}
-					} else {
-						bufout[0] = '\0';
-					}
-				} else if (buf[0] == '4') {
-					
-					char ano[1024];
-					int i2 = 1;
-					while (buf[i2] != '\0') {
-						ano[i2-1] = buf[i2];
-						i2++;
-					}
-					ano[i2-1] = buf[i2];
-					
-					char ano2[1024];
-					char buf2[1024];
-					int i3 = 0, i4 = 0, pi3 = 0;
-					int anoint = atoi(ano);
-					snprintf(ano2, 1024, "Ano de lançamento: %d", anoint);
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						if (startsWith2(line, "Ano de lançamento:")) {
-							if (c2) {
-								pi3 = i3;
-							}
-							i3 = pi3;
-							c2 = startsWith(line, ano2);
-						}
-						
-
-						if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
-							i4 = 0;
-							while (line[i4] != '\0') {
-								buf2[i3] = line[i4];
-								i3++;
-								i4++;
-							}
-						}	
-					}
-					buf2[i3] = '\0'; 
-					int i5 = 0;
-					if (i3) {
-						while (i5 < i3) {
-							bufout[i5] = buf2[i5];
-							i5++;
-						}
-					} else {
-						bufout[0] = '\0';
-					}
-				} else if (buf[0] == '3') {
-					
-					char ano[1024];
-					char idioma[1024];
-					int i2 = 1;
-					int i3 = 0, i4 = 0;
-					while (buf[i2] != '\0') {
-						idioma[i3] = buf[i2];
-						i2++;
-						i3++;
-					}
-					idioma[i3] = buf[i2];
-					i2++;
-
-					while (buf[i2] != '\0') {
-						ano[i4] = buf[i2];
-						i2++;
-						i4++;
-					}
-					ano[i4] = buf[i2];
-					
-					char ano2[1024];
-					char idioma2[1024];
-					char buf2[1024];
-					i3 = 0, i4 = 0;
-					int pi3 = 0;
-					int anoint = atoi(ano);
-					snprintf(ano2, 1024, "Ano de lançamento: %d", anoint);
-					snprintf(idioma2, 1024, "Idioma: %s", idioma);
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						if (startsWith2(line, "Idioma:")) {
-							c2 = 0;
-							if (startsWith(line, idioma2)) {
-								c2++;
-							}
-						} else if (startsWith2(line, "Ano de lançamento:")) {	
-							if (startsWith(line, ano2) && c2) {
-								c2++;
-							} else {
-								c2 = 0;
-							}
-						}
-						if (c2 == 2) {
-							pi3 = i3;
-						} else {
-							i3 = pi3;
-						}
-
-						if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
-							i4 = 0;
-							while (line[i4] != '\0') {
-								buf2[i3] = line[i4];
-								i3++;
-								i4++;
-							}
-						}	
-					}
-					buf2[i3] = '\0'; 
-					int i5 = 0;
-					if (i3) {
-						while (i5 < i3) {
-							bufout[i5] = buf2[i5];
-							i5++;
-						}
-					} else {
-						bufout[0] = '\0';
-					}
-				} else if (buf[0] == '2') {
-					int id;
-					char idc[1024];
-					int i2 = 1;
-					while (buf[i2] != '\0') {
-						idc[i2-1] = buf[i2];
-						i2++;
-					}
-					idc[i2-1] = buf[i2];
-					id = atoi(idc);
-					char idc2[1024];
-					char buf2[4096];
-					int i3 = 0, i4 = 0, pi3 = 0;
-					snprintf(idc2, 1024, "Identificador único: %d\n", id);
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						
-						if (startsWith2(line, "Identificador único:")) {
-							if (c2) {
-								pi3 = i3;
-							}
-							// i3 = pi3;
-							c2 = startsWith(line, idc2);
-						}
-						if (c2) {
-							continue;
-						}
-						
-						i4 = 0;
-						while (line[i4] != '\0') {
-							buf2[i3] = line[i4];
-							i3++;
-							i4++;
-						}	
-					}
-					buf2[i3] = '\0'; 
-					int i5 = 0;
-					if (i3) {
-						while (i5 < i3) {
-							bufout[i5] = buf2[i5];
-							i5++;
-						}
-					} else {
-						bufout[0] = '\0';
-					}
-					fclose(fptr);
-					fptr = fopen("musicas", "w");
-					fputs(bufout, fptr);
-				}  else if (buf[0] == '1') {
-					char con[1024];
-					int id;
-					char idc[1024];
-					int i2 = 1;
-					while (buf[i2] != '\n') {
-						idc[i2-1] = buf[i2];
-						con[i2-1] = buf[i2];
-						i2++;
-					}
-					while (buf[i2] != '\0') {
-						con[i2-1] = buf[i2];
-						i2++;
-					}
-					idc[i2-1] = buf[i2];
-					con[i2-1] = buf[i2];
-					id = atoi(idc);
-
-					char idc2[1024];
-					char buf2[4096];
-					int i3 = 0, i4 = 0, pi3 = 0;
-					snprintf(idc2, 1024, "Identificador único: %d", id);
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						
-						if (startsWith2(line, "Identificador único:")) {
-							c2 = startsWith(line, idc2);
-							if (c2) {
-								break;
-							}
-						}
-						
-						i4 = 0;
-						while (line[i4] != '\0') {
-							buf2[i3] = line[i4];
-							i3++;
-							i4++;
-						}	
-					}
-					if (c2) {
-						//
-					} else {
-						int i5 = 0;
-						while (con[i5] != '\0') {
-							buf2[i3] = con[i5];
-							i3++;
-							i5++;
-						}
-						buf2[i3] = '\0'; 
-						i5 = 0;
-						if (i3) {
-							while (i5 < i3) {
-								bufout[i5] = buf2[i5];
-								i5++;
-							}
-						} else {
-							bufout[0] = '\0';
-						}
-						fclose(fptr);
-						fptr = fopen("musicas", "w");
-						fputs(bufout, fptr);
-					}
-					
-
-					
-					
-				} else {
-					int id;
-					char idc[1024];
-					int i2 = 1;
-					while (buf[i2] != '\0') {
-						idc[i2-1] = buf[i2];
-						i2++;
-					}
-					idc[i2-1] = buf[i2];
-					id = atoi(idc);
-					char idc2[1024];
-					char buf2[1024];
-					int i3 = 0, i4 = 0, pi3 = 0;
-					snprintf(idc2, 1024, "%d.mp3", id);
-
-					FILE* fptr2 = fopen(idc2, "r");
-					int c2 = 0;
-					while ((read = getline(&line, &len, fptr)) != -1) {
-						if (startsWith2(line, "Identificador único:")) {
-							if (c2) {
-								pi3 = i3;
-							}
-							i3 = pi3;
-						}
-						c2 = startsWith(line, idc2);
-						i4 = 0;
-						while (line[i4] != '\0') {
-							buf2[i3] = line[i4];
-							i3++;
-							i4++;
-						}	
-					}
-					buf2[i3] = '\0'; 
-					int i5 = 0;
-					while (i5 < i3) {
-						bufout[i5] = buf2[i5];
-						i5++;
-					}
-				}
-				fclose(fptr);	
-			}
-
-
-			// close(new_fd);
-			// exit(0);
-		}
-		// close(new_fd);
-    }
+    
     
 
 	
