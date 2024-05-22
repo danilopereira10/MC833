@@ -14,6 +14,8 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <sys/select.h>
+#include <sys/fcntl.h>
 
 
 #define PORT "3490"  // the port users will be connecting to
@@ -149,6 +151,35 @@ int main(void)
 	
 	daddr_len = sizeof dtheir_addr;
 
+	fd_set readfds;
+	struct timeval tv;
+	FD_ZERO(&readfds);
+
+	FD_SET(sockfd, &readfds);
+	FD_SET(dsockfd, &readfds);
+	int n2 = dsockfd + 1;
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+	fcntl(sockfd, F_SETFL, O_NONBLOCK);
+	fcntl(dsockfd, F_SETFL, O_NONBLOCK);
+	while (1) {
+	drv = select(n2, &readfds, NULL, NULL, &tv);
+		if (drv == -1) {
+			perror("select");
+		} else if (drv == 0) {
+			//printf("Timeout occurred! No data after 1 second. \n");
+		} else {
+			if (FD_ISSET(sockfd, &readfds)) {
+				// recv(sockfd, )
+			} else {
+
+			}
+		}
+
+	}
+
+
+
 
 
 	// all right! now that we're connected, we can receive some data!
@@ -173,7 +204,7 @@ int main(void)
 					n = recv(new_fd, buf+total, bytesleft, 0);
 					printf("recv()'d %d bytes of data in buf\n", n);
 					if ((n == -1)) { 
-						exit(1);  
+						// exit(1);  
 					} else if (n == 0) {
 						f2 = 1;
 						break;
