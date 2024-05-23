@@ -186,6 +186,7 @@ int main(int argc, char* argv[])
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
 		drv = select(n2, &readfds, NULL, NULL, &tv);
+		int total = 0;
 		if (drv == -1) {
 			perror("select");
 			i5 = 0;
@@ -275,7 +276,6 @@ int main(int argc, char* argv[])
 						
 						long size;
 						char* line = NULL;
-						len = 0;
 						ssize_t read;
 						if (buf[0] == '7') {
 							fseek(fptr, 0, SEEK_END);
@@ -311,12 +311,14 @@ int main(int argc, char* argv[])
 							char idc2[1024];
 							char buf2[1024];
 							int i3 = 0, i4 = 0, pi3 = 0;
+							int len = 0;
 							snprintf(idc2, 1024, "Identificador Único: %d\n", id);
-							int c2 = 0;
+							int c2 = 0, c3 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								printf(line);
 								if (startsWith(line, "Identificador Único:")) {
 									if (c2) {
+										c3 = 1;
 										pi3 = i3;
 										break;
 										
@@ -341,10 +343,12 @@ int main(int argc, char* argv[])
 							if (i5 == 0) {
 								bufout[0] = '\0';
 							}
-							
+							if (!c3) {
+								i3 = 0;
+							}
 							int n;
 							bufout[i3] = '\0';
-							int len = i3+1;
+							len = i3+1;
 							int bytesleft = len;
 							
 							while (total < len) {
@@ -370,14 +374,16 @@ int main(int argc, char* argv[])
 							char buf2[1024];
 							int i3 = 0, i4 = 0, pi3 = 0;
 							snprintf(tipo2, 1024, "Tipo de música: %s\n", tipo);
-							int c2 = 0;
+							int len = 0;
+							int c2 = 0, c3 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								if (startsWith(line, "Tipo de música:")) {
+									c2 = startsWith(line, tipo2);
 									if (c2) {
+										c3 = 1;
 										pi3 = i3;
 									}
 									i3 = pi3;
-									c2 = startsWith(line, tipo2);
 								}
 								
 								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
@@ -389,6 +395,7 @@ int main(int argc, char* argv[])
 									}
 								}	
 							}
+							
 							buf2[i3] = '\0'; 
 							int i5 = 0;
 							if (i3) {
@@ -400,9 +407,12 @@ int main(int argc, char* argv[])
 								bufout[0] = '\0';
 							}
 
+							if (!c3) {
+								i3 = 0;
+							}
 							int n;
 							bufout[i3] = '\0';
-							int len = i3+1;
+							len = i3+1;
 							int bytesleft = len;
 							
 							while (total < len) {
@@ -413,7 +423,7 @@ int main(int argc, char* argv[])
 								total += n;
 								bytesleft -= n;
 							}
-						} else if (buf[0] == '4') {
+						} else if (buf[0] == '3') {
 							
 							char ano[1024];
 							int i2 = 1;
@@ -428,14 +438,17 @@ int main(int argc, char* argv[])
 							int i3 = 0, i4 = 0, pi3 = 0;
 							int anoint = atoi(ano);
 							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
-							int c2 = 0;
+							int len = 0;
+							int c2 = 0, c3 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								if (startsWith(line, "Ano de lançamento:")) {
+									c2 = startsWith(line, ano2);
 									if (c2) {
+										c3 = 1;
 										pi3 = i3;
 									}
 									i3 = pi3;
-									c2 = startsWith(line, ano2);
+									
 								}
 								
 
@@ -458,9 +471,12 @@ int main(int argc, char* argv[])
 							} else {
 								bufout[0] = '\0';
 							}
+							if (!c3) {
+								i3 = 0;
+							}
 							int n;
 							bufout[i3] = '\0';
-							int len = i3+1;
+							len = i3+1;
 							int bytesleft = len;
 							
 							while (total < len) {
@@ -471,7 +487,7 @@ int main(int argc, char* argv[])
 								total += n;
 								bytesleft -= n;
 							}
-						} else if (buf[0] == '3') {
+						} else if (buf[0] == '4') {
 							
 							char ano[1024];
 							char idioma[1024];
@@ -499,8 +515,9 @@ int main(int argc, char* argv[])
 							int pi3 = 0;
 							int anoint = atoi(ano);
 							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
+							int len = 0;
 							snprintf(idioma2, 1024, "Idioma: %s\n", idioma);
-							int c2 = 0;
+							int c2 = 0, c3 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								if (startsWith(line, "Idioma:")) {
 									c2 = 0;
@@ -513,12 +530,15 @@ int main(int argc, char* argv[])
 									} else {
 										c2 = 0;
 									}
+
+									if (c2 == 2) {
+										c3 = 1;
+										pi3 = i3;
+									} else {
+										i3 = pi3;
+									}
 								}
-								if (c2 == 2) {
-									pi3 = i3;
-								} else {
-									i3 = pi3;
-								}
+								
 
 								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
 									i4 = 0;
@@ -539,10 +559,12 @@ int main(int argc, char* argv[])
 							} else {
 								bufout[0] = '\0';
 							}
-
+							if (!c3) {
+								i3 = 0;
+							}
 							int n;
 							bufout[i3] = '\0';
-							int len = i3+1;
+							len = i3+1;
 							int bytesleft = len;
 							
 							while (total < len) {
@@ -567,6 +589,7 @@ int main(int argc, char* argv[])
 							char buf2[4096];
 							int i3 = 0, i4 = 0, pi3 = 0;
 							snprintf(idc2, 1024, "Identificador Único: %d\n", id);
+							int len = 0;
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								
@@ -618,7 +641,7 @@ int main(int argc, char* argv[])
 							idc[i2-1] = buf[i2];
 							con[i2-1] = buf[i2];
 							id = atoi(idc);
-
+							int len = 0;
 							char idc2[1024];
 							char buf2[4096];
 							int i3 = 0, i4 = 0, pi3 = 0;
@@ -681,7 +704,7 @@ int main(int argc, char* argv[])
 			if (FD_ISSET(dsockfd, &readfds)) {
 				
 
-				n = recvfrom(dsockfd, buf, 1006, 0, ((struct sockaddr *)&dtheir_addr), &daddr_len);
+				n = recvfrom(dsockfd, buf, 1024, 0, ((struct sockaddr *)&dtheir_addr), &daddr_len);
 				if (n == -1) {
 					/* Potencialmente nada para receber
 						- Select acionou quando não deveria
@@ -689,9 +712,11 @@ int main(int argc, char* argv[])
 					continue;
 				}
 				total += n;
-				bytesleft -= n;
+				// bytesleft -= n;
 				i5 = 0;
 				i2 = 1;
+				char idc[1024];
+				int id;
 				while (i5 < total) {
 					if (buf[i5] == '\0') {
 						while (buf[i2] != '\0') {
@@ -726,7 +751,7 @@ int main(int argc, char* argv[])
 							rewind(fptr);
 							fread(bufout2, 1, size, fptr);
 							int total = 0;
-							bytesleft = size;
+							int bytesleft = size;
 							
 							int j = 0;
 
@@ -767,7 +792,6 @@ int main(int argc, char* argv[])
 						}
 						
 						total = 0;
-						bytesleft = 1024;
 						buf[0] = '\0';
 						buf[1] = '\0';
 						i5 = 0;
