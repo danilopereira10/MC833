@@ -244,10 +244,10 @@ int main(int argc, char* argv[])
 					int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 					break;
 					printf("Recebida conexão \n");
-					// pid_t pid;
+					pid_t pid;
 					{
-					// if ((pid = fork()) == 0) {
-						// close(sockfd);
+					if ((pid = fork()) == 0) {
+						close(sockfd);
 						
 						
 						while (1) {
@@ -692,10 +692,10 @@ int main(int argc, char* argv[])
 						}
 
 
-						// close(new_fd);
-						// exit(0);
+						close(new_fd);
+						exit(0);
 					}
-					// close(new_fd);
+					close(new_fd);
 				}
 			} else {
 				
