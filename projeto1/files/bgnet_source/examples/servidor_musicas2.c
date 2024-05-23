@@ -278,6 +278,7 @@ int main(int argc, char* argv[])
 						char* line = NULL;
 						ssize_t read;
 						if (buf[0] == '7') {
+							//Copia todo o conteúdo do arquivo e retorna para o cliente
 							fseek(fptr, 0, SEEK_END);
 							size = ftell(fptr);
 							fseek(fptr, 0, SEEK_SET);
@@ -299,6 +300,7 @@ int main(int argc, char* argv[])
 								bytesleft -= n;
 							}
 						} else if (buf[0] == '6') {
+							// Faz match da linha que possuir mesmo identificador e retorna linha para o cliente
 							int id;
 							char idc[1024];
 							int i2 = 1;
@@ -361,7 +363,7 @@ int main(int argc, char* argv[])
 							}
 
 						} else if (buf[0] == '5') {
-							
+							// Faz match das músicas que possuem o mesmo tipo e retorna para o cliente
 							char tipo[1024];
 							int i2 = 1;
 							while (buf[i2] != '\0') {
@@ -424,7 +426,7 @@ int main(int argc, char* argv[])
 								bytesleft -= n;
 							}
 						} else if (buf[0] == '3') {
-							
+							// Faz match das músicas que possuem o mesmo Ano de lançamento e retorna para o cliente
 							char ano[1024];
 							int i2 = 1;
 							while (buf[i2] != '\0') {
@@ -488,7 +490,7 @@ int main(int argc, char* argv[])
 								bytesleft -= n;
 							}
 						} else if (buf[0] == '4') {
-							
+							// Faz match das músicas que possuem mesmo Ano de Lançamento e Idioma e retorna para o cliente
 							char ano[1024];
 							char idioma[1024];
 							int i2 = 1;
@@ -576,6 +578,7 @@ int main(int argc, char* argv[])
 								bytesleft -= n;
 							}
 						} else if (buf[0] == '2') {
+							// Faz match da música que possui o mesmo identificador e reescreve o arquivo de músicas sem ela.
 							int id;
 							char idc[1024];
 							int i2 = 1;
@@ -626,8 +629,11 @@ int main(int argc, char* argv[])
 							fptr = fopen("musicas", "w");
 							fwrite(bufout, 1, i3, fptr);
 						}  else if (buf[0] == '1') {
+							// Copia todo o arquivo de músicas e adiciona a nova música se já não houver outra música com o mesmo identificador
+							// con = identificador + informações
 							char con[1024];
 							int id;
+							// idc = "identificador" + o número
 							char idc[1024];
 							int i2 = 1;
 							while (buf[i2] != '\n') {
@@ -646,6 +652,7 @@ int main(int argc, char* argv[])
 							char idc2[1024];
 							char buf2[4096];
 							int i3 = 0, i4 = 0, pi3 = 0;
+							// Junta string "identificador" com o número
 							snprintf(idc2, 1024, "Identificador Único: %d\n", id);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
@@ -665,7 +672,7 @@ int main(int argc, char* argv[])
 								}	
 							}
 							if (c2) {
-								//
+								// Já encontrada música com mesmo identificador
 							} else {
 								int i5 = 0;
 								while (con[i5] != '\0') {
@@ -766,6 +773,7 @@ int main(int argc, char* argv[])
 								strncat(str2, bufout2+total, min(bytesleft, rate));
 								int total2 = 0, bytesleft2 = 6 + min(bytesleft, rate);
 								int len2 = bytesleft2;
+								// Envia pacotes de tamanho máximo bytelefts2 = 1006 para evitar desalinhamento e consequentes descartes
 								while (total2 < len2) {
 								
 									if ((n = sendto(dsockfd, str2, bytesleft2, 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
@@ -805,20 +813,6 @@ int main(int argc, char* argv[])
 		}
 
 	}
-
-
-
-
-
-	// all right! now that we're connected, we can receive some data!
-    
-    
-
-	
-		
-	
-
-	
 	return 0;
 }
 

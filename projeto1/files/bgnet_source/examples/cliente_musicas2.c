@@ -56,27 +56,24 @@ int main(int argc, char* argv[]) {
 	char* serverip = argv[1];
 	char* porttcp = argv[2];
 	char* portudp = argv[3];
-	// char* clientudpport = argv[4];
 
 	struct addrinfo hints, *res;
     int sockfd;
-    // first, load up address structs with getaddrinfo():
 
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;     // AF_INET, AF_INET6, or AF_UNSPEC
-    hints.ai_socktype = SOCK_STREAM; // SOCK_STREAM or SOCK_DGRAM
+    hints.ai_family = AF_UNSPEC;     
+    hints.ai_socktype = SOCK_STREAM; 
 
 
-    // getaddrinfo("www.example.com", "3490", &hints, &res);
+ 
     int rv;
-	// if ((rv = getaddrinfo("oliveira.lab.ic.unicamp.br", "3490", &hints, &res)) != 0) {
-    //     fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
-    // }
+
     if ((rv = getaddrinfo(serverip, porttcp, &hints, &res)) != 0) {
         fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     }
 
     struct addrinfo *p;
+	//Tentativa de criação de socket TCP
     for (p = res; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("tcp socket \n");
@@ -100,6 +97,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	// Tentativa de criação de socket UDP
 	for (dp = dservinfo; dp != NULL; dp = dp->ai_next) {
 		if ((dsockfd = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
 			perror("talker: socket");
@@ -112,14 +110,6 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "talker: failed to create socket\n");
 		return 2;
 	}
-
-
-
-	
-
-    // make a socket using the information gleaned from getaddrinfo():
-    // sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-
 
 	connect(sockfd, p->ai_addr, p->ai_addrlen);
 	
@@ -165,9 +155,10 @@ int main(int argc, char* argv[]) {
 			if (op != 1) {
 				scanf("%s", content);
 			} else {
+				// Lê diversas linhas esperando um Tab. Então para.
 				scanf("%[^\t]",content);
 			}
-			//don't forget to free content
+			
 			while (content[i] != '\0') {
 				buffer[i+1] = content[i];
 				i++;
@@ -186,13 +177,13 @@ int main(int argc, char* argv[]) {
 			}
 
 			char* content2 = NULL;
-			// int f2 = 0;
+			
 			if (op == 4) {
 				buffer[i+1] = '\0';
 				i++;
 				printf("Digite o ano: \n");
 				scanf("%ms", &content2);
-				// f2 = 1;
+
 
 				int j = 0;
 				while (content2[j] != '\0') {
@@ -214,8 +205,9 @@ int main(int argc, char* argv[]) {
 				while (total < len) {
 					n  = send(sockfd, buffer+total, bytesleft, 0);
 					if (n == -1) {
-						printf("erro: n=-1 no op entre 1 e 6\n"); 
-						break; }
+						// printf("erro: n=-1 no op entre 1 e 6\n"); 
+						break; 
+					}
 					total += n;
 					bytesleft -= n;
 				}
@@ -250,7 +242,7 @@ int main(int argc, char* argv[]) {
 				while (total < len) {
 					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);
 					if (n == -1) {
-						printf("erro n=-1 no op 8");
+						// printf("erro n=-1 no op 8");
 						break;
 					}
 					total += n;
@@ -286,6 +278,7 @@ int main(int argc, char* argv[]) {
 						//printf("Timeout occurred! No data after 1 second. \n");
 					} else {
 						int n3 = recvfrom(dsockfd, buft, rate, 0, (struct sockaddr *)&their_addr, &addr_len);
+						// A variável t representa número de sequẽncia inválido.
 						int t = 0;
 						for (int i = 0; (i < 6) && (i < n3); i++) {
 							if ((buft[i] >'9') || (buft[i] < '0')) {
@@ -293,12 +286,16 @@ int main(int argc, char* argv[]) {
 								break;
 							}
 						}
-						if ((n3 <= 7) || t) {
+						// Os 6 primeiros bytes são apenas números de sequência. 
+						// Se só tiver recebido números de sequẽncia ou houver menos número do que o necessário
+						// para identificar qual é o número de sequência, então pula
+						if ((n3 <= 6) || t) {
 							continue;
 						}
 						char n4[7];
 						memcpy(n4, buft, 6);
 						n4[6] = '\0';
+						// Converte de string para inteiro.
 						int seq = (int) strtol(n4, (char**) NULL, 10);
 						int i4 = 0;
 						hs = max(hs, seq);
@@ -306,8 +303,11 @@ int main(int argc, char* argv[]) {
 
 						while ((i4 + 6) < n3-1) {
 							if (seq * rate + i4 < 1024*1024*10-1) {
+								// Coloca os dados recebidos no número de sequẽncia correspondente.
 								bufin[seq * rate + i4] = buft[i4 + 6];
 							}
+							// A variável é utilizada como uma forma rudimentar de auferir o tamanho real da música,
+							// ao invés de utilizar o tamanho 1024*1024*10 do tamanho do vetor bufin.
 							high = max(high, seq*rate+i4);
 							i4++;
 						}
@@ -322,6 +322,8 @@ int main(int argc, char* argv[]) {
 			}
 			
 		} else {
+			// Operação de listagem de todas as informações de todas as músicas. (Operação 7)
+			// É enviada somente a operação.
 			buffer[0] = '7';
 			buffer[1] = '\0';
 			int total = 0;
