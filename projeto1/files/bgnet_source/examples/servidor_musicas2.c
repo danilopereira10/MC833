@@ -646,7 +646,7 @@ int main(int argc, char* argv[])
 							char idc2[1024];
 							char buf2[4096];
 							int i3 = 0, i4 = 0, pi3 = 0;
-							snprintf(idc2, 1024, "Identificador Único: %d", id);
+							snprintf(idc2, 1024, "Identificador Único: %d\n", id);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								

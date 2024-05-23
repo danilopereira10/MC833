@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 		buffer[0] = '0' + op;
 		char filename[14];
 		if ((op!= 7)) {
-			char* content = NULL;
+			char content[1024];
 			if ((op == 2) || (op == 6) || (op == 8)) {
 				printf("Digite o identificador: \n");
 			} else if (op == 3) {
@@ -157,12 +157,16 @@ int main(int argc, char* argv[]) {
 			} else if (op == 4) {
 				printf("Digite o idioma: \n");
 			} else if (op == 1) {
-				printf("Coloque todas as informações da música: \n");
+				printf("Coloque todas as informações da música (e digite Tab e aperte Enter no final): \n");
 			} else {
 				printf("Digite o tipo: \n");
 			}
 			
-			scanf("%ms", &content);
+			if (op != 1) {
+				scanf("%s", content);
+			} else {
+				scanf("%[^\t]",content);
+			}
 			//don't forget to free content
 			while (content[i] != '\0') {
 				buffer[i+1] = content[i];
@@ -180,6 +184,7 @@ int main(int argc, char* argv[]) {
 				filename[j+3] = '3';
 				filename[j+4] = '\0';
 			}
+
 			char* content2 = NULL;
 			// int f2 = 0;
 			if (op == 4) {
@@ -196,6 +201,7 @@ int main(int argc, char* argv[]) {
 					j++;
 				}
 			}
+			free(content2);
 			
 			
 
