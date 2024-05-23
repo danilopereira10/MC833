@@ -155,34 +155,21 @@ int main(int argc, char* argv[])
 	/* Tornar socket UDP não bloqueante.
 		No manual do Beej.s diz que o select pode dizer que o socket
 		está pronto para "recv" no Linux mesmo sem estar. Eles sugerem
-		o método fcntl para evitar o bloqueio do socket. Só não fiz isso para 
-		TCP também porque a entrega é confiável. Entretanto, meu código cliente pressupõe
-		que será possível conectar à porta TCP do servidor.
+		o método fcntl para evitar o bloqueio do socket.
 	*/
 
+	fcntl(sockfd, F_SETFL, O_NONBLOCK);
 	fcntl(dsockfd, F_SETFL, O_NONBLOCK);
 
 	fd_set readfds;
 
-	int i4 = 0;
-	/*O símbolo '\0' é utilizado para reconhecer o fim de entradas. 
+	
+	
+
+	/* essas variáveis são utilizadas para recebimento de dados pela porta UDP.
+	Elas são declaradas força do laço
 	*/
-	
-	buf[0] = '\0';
-	buf[1] = '\0';
-
-
-
-	
-	int bytesleft = 1024;
-	int total = 0;
-	int i5 = 0;
-
-	int id;
-	char idc[1024];
-	int i2 = 1;
-
-	
+	int i2 = 1, i5 = 0;
 	while (1) {
 		
 		/* Preparação de variáveis para select
@@ -200,18 +187,24 @@ int main(int argc, char* argv[])
 		tv.tv_usec = 0;
 		drv = select(n2, &readfds, NULL, NULL, &tv);
 		if (drv == -1) {
-			//Nenhum dado
 			perror("select");
-			total = 0;
-			bytesleft = 1024;
 			i5 = 0;
 			i2 = 1;
 		} else if (drv == 0) {
+			i5 = 0;
+			i2 = 1;
+			//Nenhum dado ou pedido de conexão recebidos
 			//printf("Timeout occurred! No data after 1 second. \n");
 		} else {
+			
 			if (FD_ISSET(sockfd, &readfds)) {
-
-				int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
+				//Select apontou recebimento de pedido de conexão
+				int new_fd;
+				if ((new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size)) == -1) {
+					// Não foi recebido pedido de conexão
+					continue;
+				}
+				
 				printf("Recebida conexão \n");
 				pid_t pid;
 				
@@ -228,10 +221,12 @@ int main(int argc, char* argv[])
 						int f = 0;
 						int f2 = 0;
 						while (1) {
-							n = recv(new_fd, buf+total, bytesleft, 0);
+							int total = 0;
+							int bytesleft = 1024;
+							n = recv(new_fd, buf+0, 1024, 0);
 							printf("recv()'d %d bytes of data in buf\n", n);
 							if ((n == -1)) { 
-								// exit(1);  
+								// Erro no recebimento de dados
 							} else if (n == 0) {
 								f2 = 1;
 								break;
@@ -240,11 +235,14 @@ int main(int argc, char* argv[])
 								bytesleft -= n;
 								while (j < total) {
 									if ((buf[j] == '\0')) {
-										total = 0;
-										bytesleft = 1024;
+										//A variável c conta a quantidade de '\0'
+										/* Os '\0' separam os dados que foram enviados pelo
+										cliente */
 										c++;
 									}
 									j++;
+									// Apenas a operação '4' recebe dois dados.
+									// buf[0] Sempre é a operação (varia de '1' a '8').
 									if (c && buf[0] != '4') {
 										f = 1;
 										break;
@@ -255,16 +253,20 @@ int main(int argc, char* argv[])
 								}
 							}
 							if (f || f2) {
+								// Recebidos todos os dados ou conexão finalizada
 								break;
 							}
 						}
 						if (f2) {
+							// Conexão finalizada - o socket será fechado lá embaixo.
 							break;
 						}
 
+						// Os dados foram recebidos e conexão não foi finalizada.
+						// Abrindo arquivo da descrição das músicas.
 						FILE *fptr;
 						fptr = fopen("musicas", "r");;
-						// fgets(bufout, 4096, fptr);
+						
 						long size;
 						char* line = NULL;
 						len = 0;
@@ -593,7 +595,7 @@ int main(int argc, char* argv[])
 							fclose(fptr);
 							fptr = fopen("musicas", "w");
 							fputs(bufout, fptr);
-						}  else {
+						}  else if (buf[0] == '1') {
 							char con[1024];
 							int id;
 							char idc[1024];
@@ -669,10 +671,17 @@ int main(int argc, char* argv[])
 				}
 				close(new_fd);
 				
-			} else {
+			} 
+			if (FD_ISSET(dsockfd, &readfds)) {
 				
 
-				n = recvfrom(dsockfd, buf, bytesleft+total, 0, ((struct sockaddr *)&dtheir_addr), &daddr_len);
+				n = recvfrom(dsockfd, buf, 1006, 0, ((struct sockaddr *)&dtheir_addr), &daddr_len);
+				if (n == -1) {
+					/* Potencialmente nada para receber
+						- Select acionou quando não deveria
+					*/
+					continue;
+				}
 				total += n;
 				bytesleft -= n;
 				i5 = 0;
