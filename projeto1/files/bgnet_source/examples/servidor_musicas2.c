@@ -777,7 +777,7 @@ int main(int argc, char* argv[])
 								while (total2 < len2) {
 								
 									if ((n = sendto(dsockfd, str2, bytesleft2, 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
-										printf("Erro no envio n=-1 op8 \n");
+										// printf("Erro no envio n=-1 op8 \n");
 										//skip packet
 										total2 = len2;
 										bytesleft2 = 0;
@@ -785,7 +785,7 @@ int main(int argc, char* argv[])
 									}
 								
 									if (n != 1006) {
-										printf("opa\n");
+										// printf("opa\n");
 									}
 									printf("Enviados %d bytes \n", n);
 									total2 += n;
