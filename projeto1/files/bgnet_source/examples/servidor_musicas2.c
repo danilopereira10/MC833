@@ -19,32 +19,6 @@
 
 
 
-#define PORT "3490"  // the port users will be connecting to
-
-#define BACKLOG 10	 // how many pending connections queue will hold
-
-void sigchld_handler(int s)
-{
-	(void)s; // quiet unused variable warning
-
-	// waitpid() might overwrite errno, so we save and restore it:
-	int saved_errno = errno;
-
-	while(waitpid(-1, NULL, WNOHANG) > 0);
-
-	errno = saved_errno;
-}
-
-
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
-
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
 
 
 int max(int a, int b) {
@@ -61,42 +35,11 @@ int min(int a, int b) {
 	return b;
 }
 
-int extra(int c) {
-	if (c <= 9) {
-		return c + 1;
-	} else if (c <= 99) {
-		return 10 + 2 * (c - 9);
-	} else if (c <= 999) {
-		return 190 + 3* (c - 99);
-	} else if (c <= 9999) {
-		return 2890 + 4 * (c - 999);
-	} else {
-		return 38890 + 5 * (c - 9999);
-	}
-}
 
-// int extra(int c) {
-// 	int t = 1;
-// 	int p = 1;
-// 	int d = 1;
-// 	while (c != 0) {
-// 		t += (c % 10) * p * d;
-// 		c /= 10;
-// 		p *= 10;
-// 		d++;
-// 	}
-// }
 
+/*Método para filtragem (verificar se identificado bate com identificador, 
+tipo de música bate com tipo de música, etc...)*/
 int startsWith(const char *a, const char *b) {
-	if (strlen(a) == strlen(b)) {
-		if (strncmp(a,b, strlen(b)) == 0) {
-			return 1;
-		}
-	}
-	return 0;
-}
-
-int startsWith2(const char *a, const char *b) {
 	if (strlen(a) >= strlen(b)) {
 		if (strncmp(a,b, strlen(b)) == 0) {
 			return 1;
@@ -105,11 +48,9 @@ int startsWith2(const char *a, const char *b) {
 	return 0;
 }
 
-#define MYPORT "3490"
-#define MAXBUFLEN 100
 int main(int argc, char* argv[])
 {
-	// stream sockets and recv()
+	
 
 	struct addrinfo hints, *res;
 	int sockfd;
@@ -119,18 +60,14 @@ int main(int argc, char* argv[])
     
     struct sockaddr_storage their_addr;
 
-	// get host info, make socket, and connect it
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+	hints.ai_family = AF_UNSPEC;  
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	// getaddrinfo("www.example.com", "3490", &hints, &res);
 
 	int rv;
-    // if ((rv = getaddrinfo(NULL, "3490", &hints, &res)) != 0 ) {
-    //     fprintf(stderr, "getaddrinfo tcp: %s \n", gai_strerror(rv));
-    // }
+    
 	char* porttcp = argv[1];
 	char* portudp = argv[2];
     if ((rv = getaddrinfo(NULL, argv[1], &hints, &res)) != 0 ) {
@@ -138,6 +75,7 @@ int main(int argc, char* argv[])
     }
 
     struct addrinfo *p;
+	//tentativa de criação e binding de socket
     for (p = res; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("tcp socket \n");
@@ -162,9 +100,10 @@ int main(int argc, char* argv[])
 	}
     socklen_t addr_size;
     addr_size = sizeof their_addr;
-	// int new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
-	// n = recv(new_fd, buf, 1024, 0);
 
+	/* socket para UDP. Abaixo seguem todas as variáveis e criações 
+		correspondentes.
+	*/
 	int dsockfd;
 	struct addrinfo dhints, *dservinfo, *dp;
 	int drv;
@@ -185,6 +124,7 @@ int main(int argc, char* argv[])
 	}
 
 	
+	//Tentativa de criação socket UDP
 	for (dp = dservinfo; dp != NULL; dp=dp->ai_next) {
 		if ((dsockfd = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
 			perror("listener: socket");
@@ -212,22 +152,28 @@ int main(int argc, char* argv[])
 	daddr_len = sizeof dtheir_addr;
 
 	
-	// FD_ZERO(&readfds);
+	/* Tornar socket UDP não bloqueante.
+		No manual do Beej.s diz que o select pode dizer que o socket
+		está pronto para "recv" no Linux mesmo sem estar. Eles sugerem
+		o método fcntl para evitar o bloqueio do socket. Só não fiz isso para 
+		TCP também porque a entrega é confiável. Entretanto, meu código cliente pressupõe
+		que será possível conectar à porta TCP do servidor.
+	*/
 
-	// FD_SET(sockfd, &readfds);
-	// FD_SET(dsockfd, &readfds);
-	// int n2 = dsockfd + 1;
-	// tv.tv_sec = 1;
-	// tv.tv_usec = 0;
-	// fcntl(sockfd, F_SETFL, O_NONBLOCK);
 	fcntl(dsockfd, F_SETFL, O_NONBLOCK);
 
 	fd_set readfds;
+
 	int i4 = 0;
+	/*O símbolo '\0' é utilizado para reconhecer o fim de entradas. 
+	*/
+	
 	buf[0] = '\0';
 	buf[1] = '\0';
 
 
+
+	
 	int bytesleft = 1024;
 	int total = 0;
 	int i5 = 0;
@@ -239,16 +185,22 @@ int main(int argc, char* argv[])
 	
 	while (1) {
 		
+		/* Preparação de variáveis para select
+			O select atua entre receber conexões na porta TCP ou
+			receber requisições pela porta UDP
+		*/
 		struct timeval tv;
 		FD_ZERO(&readfds);
 
 		FD_SET(sockfd, &readfds);
 		FD_SET(dsockfd, &readfds);
 		int n2 = max(dsockfd,sockfd) + 1;
+		//Intervalo de 1 segundo.
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
 		drv = select(n2, &readfds, NULL, NULL, &tv);
 		if (drv == -1) {
+			//Nenhum dado
 			perror("select");
 			total = 0;
 			bytesleft = 1024;
@@ -355,7 +307,7 @@ int main(int argc, char* argv[])
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								printf(line);
-								if (startsWith2(line, "Identificador Único:")) {
+								if (startsWith(line, "Identificador Único:")) {
 									if (c2) {
 										pi3 = i3;
 										break;
@@ -412,7 +364,7 @@ int main(int argc, char* argv[])
 							snprintf(tipo2, 1024, "Tipo de música: %s\n", tipo);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
-								if (startsWith2(line, "Tipo de música:")) {
+								if (startsWith(line, "Tipo de música:")) {
 									if (c2) {
 										pi3 = i3;
 									}
@@ -420,7 +372,7 @@ int main(int argc, char* argv[])
 									c2 = startsWith(line, tipo2);
 								}
 								
-								if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
 									i4 = 0;
 									while (line[i4] != '\0') {
 										buf2[i3] = line[i4];
@@ -470,7 +422,7 @@ int main(int argc, char* argv[])
 							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
-								if (startsWith2(line, "Ano de lançamento:")) {
+								if (startsWith(line, "Ano de lançamento:")) {
 									if (c2) {
 										pi3 = i3;
 									}
@@ -479,7 +431,7 @@ int main(int argc, char* argv[])
 								}
 								
 
-								if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
 									i4 = 0;
 									while (line[i4] != '\0') {
 										buf2[i3] = line[i4];
@@ -542,12 +494,12 @@ int main(int argc, char* argv[])
 							snprintf(idioma2, 1024, "Idioma: %s\n", idioma);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
-								if (startsWith2(line, "Idioma:")) {
+								if (startsWith(line, "Idioma:")) {
 									c2 = 0;
 									if (startsWith(line, idioma2)) {
 										c2++;
 									}
-								} else if (startsWith2(line, "Ano de lançamento:")) {	
+								} else if (startsWith(line, "Ano de lançamento:")) {	
 									if (startsWith(line, ano2) && c2) {
 										c2++;
 									} else {
@@ -560,7 +512,7 @@ int main(int argc, char* argv[])
 									i3 = pi3;
 								}
 
-								if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
 									i4 = 0;
 									while (line[i4] != '\0') {
 										buf2[i3] = line[i4];
@@ -579,7 +531,7 @@ int main(int argc, char* argv[])
 							} else {
 								bufout[0] = '\0';
 							}
-							
+
 							int n;
 							bufout[i3] = '\0';
 							int len = i3+1;
@@ -610,7 +562,7 @@ int main(int argc, char* argv[])
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								
-								if (startsWith2(line, "Identificador Único:")) {
+								if (startsWith(line, "Identificador Único:")) {
 									if (c2) {
 										pi3 = i3;
 									}
@@ -666,7 +618,7 @@ int main(int argc, char* argv[])
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								
-								if (startsWith2(line, "Identificador Único:")) {
+								if (startsWith(line, "Identificador Único:")) {
 									c2 = startsWith(line, idc2);
 									if (c2) {
 										break;
