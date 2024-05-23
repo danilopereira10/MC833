@@ -219,25 +219,27 @@ int main(int argc, char* argv[]) {
 				bytesleft = 4096;
 				int j = 0;
 				int f2 = 0;
-				while (total < 4096) {
-					n = recv(sockfd, bufin+total, bytesleft, 0);
-					if (n == 0) {
-						break;
-					}
-					total += n;
-					bytesleft -= n;
-					while (j < total) {
-						if (bufin[j] == '\0') {
-							f2 = 1;
+				if ((op != 2) && (op != 1)) {
+					while (total < 4096) {
+						n = recv(sockfd, bufin+total, bytesleft, 0);
+						if (n == 0) {
 							break;
 						}
-						j++;
+						total += n;
+						bytesleft -= n;
+						while (j < total) {
+							if (bufin[j] == '\0') {
+								f2 = 1;
+								break;
+							}
+							j++;
+						}
+						if (f2) {
+							break;
+						}
 					}
-					if (f2) {
-						break;
-					}
+					printf(bufin);
 				}
-				printf(bufin);
 			} else {
 				while (total < len) {
 					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);

@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 				printf("Recebida conexão \n");
 				pid_t pid;
 				
-				if ((pid = fork()) == 0) {
+				// if ((pid = fork()) == 0) {
 					close(sockfd);
 					
 					
@@ -595,8 +595,9 @@ int main(int argc, char* argv[])
 								
 								if (startsWith(line, "Identificador Único:")) {
 									if (c2) {
-										pi3 = i3;
+										i3 = pi3;
 									}
+									pi3 = i3;
 									// i3 = pi3;
 									c2 = startsWith(line, idc2);
 								}
@@ -623,7 +624,7 @@ int main(int argc, char* argv[])
 							}
 							fclose(fptr);
 							fptr = fopen("musicas", "w");
-							fputs(bufout, fptr);
+							fwrite(bufout, 1, i3, fptr);
 						}  else if (buf[0] == '1') {
 							char con[1024];
 							int id;
@@ -684,7 +685,7 @@ int main(int argc, char* argv[])
 								}
 								fclose(fptr);
 								fptr = fopen("musicas", "w");
-								fputs(bufout, fptr);
+								fwrite(bufout, 1, i3, fptr);
 							}
 							
 
@@ -697,8 +698,8 @@ int main(int argc, char* argv[])
 
 					close(new_fd);
 					exit(0);
-				}
-				close(new_fd);
+				// }
+				 close(new_fd);
 				
 			} 
 			if (FD_ISSET(dsockfd, &readfds)) {
