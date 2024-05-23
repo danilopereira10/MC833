@@ -1,0 +1,4 @@
+Compile o servidor nessa pasta a partir do terminal escrevendo "make" e apertando enter.
+O servidor automaticamente utiliza algum endereço IP dele próprio.
+O programa servidor deve ser executado como ./servidor <porta TCP servidor> <porta UDP servidor>. O servidor deve ser executado antes do cliente.
+Isso é tudo para o servidor. A parte do cliente está na pasta cliente.

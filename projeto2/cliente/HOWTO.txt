@@ -1,0 +1,43 @@
+Compile o cliente entrando na pasta cliente com o terminal, escrevendo "make" e pressionando "Enter".
+Já o programa cliente deve ser executado como ./cliente <endereço ip ou nome de domínio do servidor sem aspas> <porta TCP servidor> <porta UDP servidor>. O servidor deve ser executado antes do cliente.
+
+Exemplo de chamadas:
+Para cadastrar uma música:
+1
+Identificador Único: 9
+Título: As Quatro Estações (Le Quattro Stagioni)
+Intérprete: Antônio Vivaldi
+Idioma: Italiano
+Tipo de música: Clássica
+Refrão: Não possui
+Ano de lançamento: 1723
+
+Para remover uma música:
+2
+8
+
+Listar todas as músicas (identificador, título e intérprete) lançadas em um determinado ano:
+3
+2024
+
+Listar todas as músicas (identificador, título e intérprete) em um dado idioma lançadas num certo ano (chamei instrumental de idioma);
+4
+Instrumental
+2024
+
+Listar todas as músicas (identificador, título e intérprete) de um certo tipo;
+5
+Eletrônica
+
+Listar todas as informações de uma música dado o seu identificador;
+6
+1
+
+Listar todas as informações de todas as músicas;
+7
+
+Fazer o download de uma música a partir de seu identificador (somente no projeto 2,com UDP) - vai baixar a música 1.mp3 nesse exemplo. O número da segunda linha é utilizada para identificar qual música se deseja baixar.:
+8
+1
+
+
