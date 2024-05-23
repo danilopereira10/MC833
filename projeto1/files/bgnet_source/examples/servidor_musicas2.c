@@ -53,6 +53,32 @@ int min(int a, int b) {
 	return b;
 }
 
+int extra(int c) {
+	if (c <= 9) {
+		return c + 1;
+	} else if (c <= 99) {
+		return 10 + 2 * (c - 9);
+	} else if (c <= 999) {
+		return 190 + 3* (c - 99);
+	} else if (c <= 9999) {
+		return 2890 + 4 * (c - 999);
+	} else {
+		return 38890 + 5 * (c - 9999);
+	}
+}
+
+// int extra(int c) {
+// 	int t = 1;
+// 	int p = 1;
+// 	int d = 1;
+// 	while (c != 0) {
+// 		t += (c % 10) * p * d;
+// 		c /= 10;
+// 		p *= 10;
+// 		d++;
+// 	}
+// }
+
 int startsWith(const char *a, const char *b) {
 	if (strlen(a) == strlen(b)) {
 		if (strncmp(a,b, strlen(b)) == 0) {
@@ -169,18 +195,18 @@ int main(int argc, char* argv[])
 	
 	daddr_len = sizeof dtheir_addr;
 
-	fd_set readfds;
-	struct timeval tv;
-	FD_ZERO(&readfds);
+	
+	// FD_ZERO(&readfds);
 
-	FD_SET(sockfd, &readfds);
-	FD_SET(dsockfd, &readfds);
-	int n2 = dsockfd + 1;
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
+	// FD_SET(sockfd, &readfds);
+	// FD_SET(dsockfd, &readfds);
+	// int n2 = dsockfd + 1;
+	// tv.tv_sec = 1;
+	// tv.tv_usec = 0;
 	// fcntl(sockfd, F_SETFL, O_NONBLOCK);
 	fcntl(dsockfd, F_SETFL, O_NONBLOCK);
 
+	fd_set readfds;
 	int i4 = 0;
 	buf[0] = '\0';
 	buf[1] = '\0';
@@ -194,6 +220,15 @@ int main(int argc, char* argv[])
 	char idc[1024];
 	int i2 = 1;
 	while (1) {
+		
+		struct timeval tv;
+		FD_ZERO(&readfds);
+
+		FD_SET(sockfd, &readfds);
+		FD_SET(dsockfd, &readfds);
+		int n2 = dsockfd + 1;
+		tv.tv_sec = 1;
+		tv.tv_usec = 0;
 		drv = select(n2, &readfds, NULL, NULL, &tv);
 		if (drv == -1) {
 			perror("select");
@@ -629,7 +664,7 @@ int main(int argc, char* argv[])
 								int i3 = 0, i4 = 0, pi3 = 0;
 								snprintf(idc2, 1024, "%d.mp3", id);
 
-								FILE* fptr2 = fopen(idc2, "r");
+								FILE* fptr2 = fopen(idc2, "rb");
 								int c2 = 0;
 								while ((read = getline(&line, &len, fptr)) != -1) {
 									if (startsWith2(line, "Identificador único:")) {
@@ -691,6 +726,9 @@ int main(int argc, char* argv[])
 
 							fseek(fptr, 0, SEEK_END);
 							size = ftell(fptr);
+							int rate = 1000;
+							int am = size / rate;
+							
 							char bufout2[size+1];
 							fseek(fptr, 0, SEEK_SET);
 							rewind(fptr);
@@ -702,15 +740,24 @@ int main(int argc, char* argv[])
 							len = size+1;
 							int bytesleft = len;
 							
-							int rate = 60;
+							
+							int j = 0;
 							while (total < len) {
-								if ((n = sendto(dsockfd, bufout2+total, min(bytesleft,rate), 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
+								int s2 = (int)(ceil(log10())+1);
+								char str[s2];
+								sprintf(str, "%d", j);
+								char str2[s2 + min(bytesleft, rate)];
+								memcpy(str2, str, s2);
+								memcpy(str2[s2], bufout2+total, min(bytesleft, rate));
+
+								if ((n = sendto(dsockfd, str, 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
 									printf("Erro no envio n=-1 op8 \n");
 									break;
 								}
 								printf("Enviados %d bytes \n", n);
 								total += n;
 								bytesleft -= n;
+								j++;
 							}
 							
 						}

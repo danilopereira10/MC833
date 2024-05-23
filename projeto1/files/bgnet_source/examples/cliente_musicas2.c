@@ -14,7 +14,7 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-
+#include <sys/select.h>
 
 #define PORT "3490"  // the port users will be connecting to
 #define PORT2 "3491"
@@ -106,42 +106,7 @@ int main(int argc, char* argv[]) {
 		return 2;
 	}
 
-	int dcsockfd;
-	struct addrinfo dchints, *dcservinfo, *dcp;
-	int dcrv;
-	int dcnumbytes;
-	struct sockaddr_storage dctheir_addr;
-	socklen_t dcaddr_len;
 
-
-	memset(&dchints, 0, sizeof dchints);
-	dchints.ai_family = AF_UNSPEC;
-	dchints.ai_socktype = SOCK_DGRAM;
-	dchints.ai_flags = AI_PASSIVE;
-
-	if ((dcrv = getaddrinfo(serverip, portudp, &dchints, &dcservinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(dcrv));
-		return 1;
-	}
-
-	for (dcp = dcservinfo; dcp != NULL; dcp = dcp->ai_next) {
-		if ((dcsockfd = socket(dcp->ai_family, dcp->ai_socktype, dcp->ai_protocol)) == -1) {
-			perror("talker: socket");
-			continue;
-		}
-
-		if ((bind(dcsockfd, dcp->ai_addr, dcp->ai_addrlen)) == -1) {
-			close(dcsockfd);
-			perror("listener: bind");
-			continue;
-		}
-		break;
-	}
-
-	if (dcp == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return 2;
-	}
 
 	
 
@@ -151,6 +116,8 @@ int main(int argc, char* argv[]) {
 
 	connect(sockfd, p->ai_addr, p->ai_addrlen);
 	
+	struct sockaddr_storage their_addr;
+	socklen_t addr_len;
 	while (1) {
 		int op = 0;
 		while (op < 1 || op > 9) {
@@ -268,6 +235,33 @@ int main(int argc, char* argv[]) {
 					}
 					total += n;
 					bytesleft -= n;
+				}
+				fd_set readfds;
+				int total2 = 0;
+				char bufin[1024*1024*10];
+				bytesleft = 1024*1024*10;
+				int rate = 1006;
+				char buft[1000];
+				while (1) {
+					struct timeval tv;
+					FD_ZERO(&readfds);
+					FD_SET(dsockfd, &readfds);
+					int n2 = dsockfd+1;
+					tv.tv_sec =1;
+					tv.tv_usec = 0;
+					drv = select(n2, &readfds, NULL, NULL, &tv);
+					if (drv == -1) {
+						perror("select");
+						bufin[total2] = '\0';
+						break;
+					} else if (drv == 0) {
+						bufin[total2] = '\0';
+						break;
+						//printf("Timeout occurred! No data after 1 second. \n");
+					} else {
+						n = recvfrom(dsockfd, buft, rate, 0, (struct sockaddr *)&their_addr, &addr_len);
+					}
+
 				}
 			}
 			
