@@ -240,8 +240,8 @@ int main(int argc, char* argv[]) {
 				int total2 = 0;
 				char bufin[1024*1024*10];
 				bytesleft = 1024*1024*10;
-				int rate = 1006;
-				char buft[1000];
+				int rate = 1007;
+				char buft[rate];
 				while (1) {
 					struct timeval tv;
 					FD_ZERO(&readfds);
@@ -260,6 +260,16 @@ int main(int argc, char* argv[]) {
 						//printf("Timeout occurred! No data after 1 second. \n");
 					} else {
 						n = recvfrom(dsockfd, buft, rate, 0, (struct sockaddr *)&their_addr, &addr_len);
+						int t = 0;
+						for (int i = 0; (i < 7) && (i < n); i++) {
+							if ((buft[i] >'9') || (buft[i] < '0')) {
+								t = 1;
+								break;
+							}
+						}
+						if ((n <= 7) || t) {
+							continue;
+						}
 					}
 
 				}

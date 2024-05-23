@@ -743,14 +743,14 @@ int main(int argc, char* argv[])
 							
 							int j = 0;
 							while (total < len) {
-								int s2 = (int)(ceil(log10())+1);
+								int s2 = 7;
 								char str[s2];
-								sprintf(str, "%d", j);
+								sprintf(str, "%06d", j);
 								char str2[s2 + min(bytesleft, rate)];
 								memcpy(str2, str, s2);
 								memcpy(str2[s2], bufout2+total, min(bytesleft, rate));
 
-								if ((n = sendto(dsockfd, str, 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
+								if ((n = sendto(dsockfd, str2, s2 + min(bytesleft, rate), 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
 									printf("Erro no envio n=-1 op8 \n");
 									break;
 								}
@@ -761,7 +761,7 @@ int main(int argc, char* argv[])
 							}
 							
 						}
-						//sendto();
+						
 						total = 0;
 						bytesleft = 1024;
 						buf[0] = '\0';
