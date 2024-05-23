@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 					break;
 					printf("Recebida conexão \n");
 					pid_t pid;
-					{
+					
 					if ((pid = fork()) == 0) {
 						close(sockfd);
 						
@@ -583,7 +583,7 @@ int main(int argc, char* argv[])
 								fclose(fptr);
 								fptr = fopen("musicas", "w");
 								fputs(bufout, fptr);
-							}  else if (buf[0] == '1') {
+							}  else {
 								char con[1024];
 								int id;
 								char idc[1024];
@@ -649,45 +649,7 @@ int main(int argc, char* argv[])
 
 								
 								
-							} else {
-								int id;
-								char idc[1024];
-								int i2 = 1;
-								while (buf[i2] != '\0') {
-									idc[i2-1] = buf[i2];
-									i2++;
-								}
-								idc[i2-1] = buf[i2];
-								id = atoi(idc);
-								char idc2[1024];
-								char buf2[1024];
-								int i3 = 0, i4 = 0, pi3 = 0;
-								snprintf(idc2, 1024, "%d.mp3", id);
-
-								FILE* fptr2 = fopen(idc2, "rb");
-								int c2 = 0;
-								while ((read = getline(&line, &len, fptr)) != -1) {
-									if (startsWith2(line, "Identificador único:")) {
-										if (c2) {
-											pi3 = i3;
-										}
-										i3 = pi3;
-									}
-									c2 = startsWith(line, idc2);
-									i4 = 0;
-									while (line[i4] != '\0') {
-										buf2[i3] = line[i4];
-										i3++;
-										i4++;
-									}	
-								}
-								buf2[i3] = '\0'; 
-								int i5 = 0;
-								while (i5 < i3) {
-									bufout[i5] = buf2[i5];
-									i5++;
-								}
-							}
+							} 
 							fclose(fptr);	
 						}
 
@@ -729,7 +691,7 @@ int main(int argc, char* argv[])
 							int rate = 1000;
 							int am = size / rate;
 							
-							char bufout2[size+1];
+							char* bufout2 = malloc((size+1) * sizeof(char));
 							fseek(fptr, 0, SEEK_SET);
 							rewind(fptr);
 							fread(bufout2, 1, size, fptr);
@@ -759,6 +721,7 @@ int main(int argc, char* argv[])
 								bytesleft -= n;
 								j++;
 							}
+							free(bufout2);
 							
 						}
 						

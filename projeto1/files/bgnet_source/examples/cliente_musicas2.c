@@ -44,6 +44,13 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+int max(int a, int b) {
+	if (a > b) {
+		return a;
+	}
+	return b;
+}
+
 #define MYPORT "3490"
 int main(int argc, char* argv[]) {
 	char* serverip = argv[1];
@@ -140,6 +147,7 @@ int main(int argc, char* argv[]) {
 		int i = 0;
 		char buffer[1024];
 		buffer[0] = '0' + op;
+		char filename[14];
 		if ((op!= 7)) {
 			char* content = NULL;
 			if ((op == 2) || (op == 6) || (op == 8)) {
@@ -159,6 +167,18 @@ int main(int argc, char* argv[]) {
 			while (content[i] != '\0') {
 				buffer[i+1] = content[i];
 				i++;
+			}
+			if (op == 8) {
+				int j = 0;
+				while (content[j] != '\0') {
+					filename[j] = content[j];
+					j++;
+				}
+				filename[j] = '.';
+				filename[j+1] = 'm';
+				filename[j+2] = 'p';
+				filename[j+3] = '3';
+				filename[j+4] = '\0';
 			}
 			char* content2 = NULL;
 			// int f2 = 0;
@@ -238,10 +258,12 @@ int main(int argc, char* argv[]) {
 				}
 				fd_set readfds;
 				int total2 = 0;
-				char bufin[1024*1024*10];
+				char* bufin = malloc(1024*1024*10 * sizeof(char));
 				bytesleft = 1024*1024*10;
+				bufin[bytesleft-1] = '\0';
 				int rate = 1007;
 				char buft[rate];
+				int high = 0;
 				while (1) {
 					struct timeval tv;
 					FD_ZERO(&readfds);
@@ -270,9 +292,24 @@ int main(int argc, char* argv[]) {
 						if ((n <= 7) || t) {
 							continue;
 						}
+						char n[7];
+						memcpy(n, buft, 7);
+						int seq = (int) strtol(n, (char**) NULL, 10);
+						int i4 = 0;
+						
+
+						while ((i4 + 7) < n) {
+							bufin[seq * rate + i4] = buft[i4 + 7];
+							high = max(high, seq*rate+i4);
+						}
 					}
 
 				}
+				FILE* fptr = fopen(filename, "wb");
+				high++;
+				fwrite(bufin, 1, high, fptr);
+				fclose(fptr);
+				free(bufin);
 			}
 			
 		} else {
