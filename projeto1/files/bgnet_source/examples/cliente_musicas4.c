@@ -239,6 +239,14 @@ int main(int argc, char* argv[]) {
 				}
 				printf(bufin);
 			} else {
+				int i4 = 0;
+				i++;
+				while (serverip[i4] != '\0') {
+					buffer[i] = serverip[i4];
+					i++;
+				}
+				buffer[i] = '\0';
+
 				while (total < len) {
 					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);
 					if (n == -1) {
@@ -253,10 +261,9 @@ int main(int argc, char* argv[]) {
 				char* bufin = malloc(1024*1024*10 * sizeof(char));
 				bytesleft = 1024*1024*10;
 				bufin[bytesleft-1] = '\0';
-				int rate = 1000;
+				int rate = 1007;
 				char buft[rate];
 				int high = 0;
-				int hs = 0;
 				while (1) {
 					struct timeval tv;
 					FD_ZERO(&readfds);
@@ -274,31 +281,26 @@ int main(int argc, char* argv[]) {
 						break;
 						//printf("Timeout occurred! No data after 1 second. \n");
 					} else {
-						int n3 = recvfrom(dsockfd, buft, rate, 0, (struct sockaddr *)&their_addr, &addr_len);
+						n = recvfrom(dsockfd, buft, rate, 0, (struct sockaddr *)&their_addr, &addr_len);
 						int t = 0;
-						for (int i = 0; (i < 6) && (i < n3); i++) {
+						for (int i = 0; (i < 7) && (i < n); i++) {
 							if ((buft[i] >'9') || (buft[i] < '0')) {
 								t = 1;
 								break;
 							}
 						}
-						if ((n3 <= 7) || t) {
+						if ((n <= 7) || t) {
 							continue;
 						}
-						char n4[7];
-						memcpy(n4, buft, 6);
-						n4[6] = '\0';
-						int seq = (int) strtol(n4, (char**) NULL, 10);
+						char n[7];
+						memcpy(n, buft, 7);
+						int seq = (int) strtol(n, (char**) NULL, 10);
 						int i4 = 0;
-						hs = max(hs, seq);
 						
 
-						while ((i4 + 6) < n3-1) {
-							if (seq * rate + i4 < 1024*1024*10-1) {
-								bufin[seq * rate + i4] = buft[i4 + 6];
-							}
+						while ((i4 + 7) < n) {
+							bufin[seq * rate + i4] = buft[i4 + 7];
 							high = max(high, seq*rate+i4);
-							i4++;
 						}
 					}
 
