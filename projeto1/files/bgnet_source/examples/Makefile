@@ -15,4 +15,4 @@ clean:
 pristine: clean
 
 %: %.c
-	$(CC) $(CCOPTS) -o $@ $< $(LIBS)
+	$(CC) $(CCOPTS) -lm -o $@ $< $(LIBS)
