@@ -409,7 +409,7 @@ int main(int argc, char* argv[])
 							char tipo2[1024];
 							char buf2[1024];
 							int i3 = 0, i4 = 0, pi3 = 0;
-							snprintf(tipo2, 1024, "Tipo de música: %s", tipo);
+							snprintf(tipo2, 1024, "Tipo de música: %s\n", tipo);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								if (startsWith2(line, "Tipo de música:")) {
@@ -439,6 +439,20 @@ int main(int argc, char* argv[])
 							} else {
 								bufout[0] = '\0';
 							}
+
+							int n;
+							bufout[i3] = '\0';
+							int len = i3+1;
+							int bytesleft = len;
+							
+							while (total < len) {
+								if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
+									printf("Erro no envio n=-1 op7 \n");
+								}
+								printf("Enviados %d bytes \n", n);
+								total += n;
+								bytesleft -= n;
+							}
 						} else if (buf[0] == '4') {
 							
 							char ano[1024];
@@ -453,7 +467,7 @@ int main(int argc, char* argv[])
 							char buf2[1024];
 							int i3 = 0, i4 = 0, pi3 = 0;
 							int anoint = atoi(ano);
-							snprintf(ano2, 1024, "Ano de lançamento: %d", anoint);
+							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								if (startsWith2(line, "Ano de lançamento:")) {
@@ -465,7 +479,7 @@ int main(int argc, char* argv[])
 								}
 								
 
-								if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+								if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
 									i4 = 0;
 									while (line[i4] != '\0') {
 										buf2[i3] = line[i4];
@@ -483,6 +497,19 @@ int main(int argc, char* argv[])
 								}
 							} else {
 								bufout[0] = '\0';
+							}
+							int n;
+							bufout[i3] = '\0';
+							int len = i3+1;
+							int bytesleft = len;
+							
+							while (total < len) {
+								if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
+									printf("Erro no envio n=-1 op7 \n");
+								}
+								printf("Enviados %d bytes \n", n);
+								total += n;
+								bytesleft -= n;
 							}
 						} else if (buf[0] == '3') {
 							
@@ -511,8 +538,8 @@ int main(int argc, char* argv[])
 							i3 = 0, i4 = 0;
 							int pi3 = 0;
 							int anoint = atoi(ano);
-							snprintf(ano2, 1024, "Ano de lançamento: %d", anoint);
-							snprintf(idioma2, 1024, "Idioma: %s", idioma);
+							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
+							snprintf(idioma2, 1024, "Idioma: %s\n", idioma);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								if (startsWith2(line, "Idioma:")) {
@@ -533,7 +560,7 @@ int main(int argc, char* argv[])
 									i3 = pi3;
 								}
 
-								if (startsWith2(line, "Identificador único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
+								if (startsWith2(line, "Identificador Único")|| startsWith2(line, "Título") || startsWith2(line, "Intérprete")) {
 									i4 = 0;
 									while (line[i4] != '\0') {
 										buf2[i3] = line[i4];
@@ -552,6 +579,20 @@ int main(int argc, char* argv[])
 							} else {
 								bufout[0] = '\0';
 							}
+							
+							int n;
+							bufout[i3] = '\0';
+							int len = i3+1;
+							int bytesleft = len;
+							
+							while (total < len) {
+								if ((n = send(new_fd, bufout+total, bytesleft, 0)) == -1 ) {
+									printf("Erro no envio n=-1 op7 \n");
+								}
+								printf("Enviados %d bytes \n", n);
+								total += n;
+								bytesleft -= n;
+							}
 						} else if (buf[0] == '2') {
 							int id;
 							char idc[1024];
@@ -565,11 +606,11 @@ int main(int argc, char* argv[])
 							char idc2[1024];
 							char buf2[4096];
 							int i3 = 0, i4 = 0, pi3 = 0;
-							snprintf(idc2, 1024, "Identificador único: %d\n", id);
+							snprintf(idc2, 1024, "Identificador Único: %d\n", id);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								
-								if (startsWith2(line, "Identificador único:")) {
+								if (startsWith2(line, "Identificador Único:")) {
 									if (c2) {
 										pi3 = i3;
 									}
@@ -621,11 +662,11 @@ int main(int argc, char* argv[])
 							char idc2[1024];
 							char buf2[4096];
 							int i3 = 0, i4 = 0, pi3 = 0;
-							snprintf(idc2, 1024, "Identificador único: %d", id);
+							snprintf(idc2, 1024, "Identificador Único: %d", id);
 							int c2 = 0;
 							while ((read = getline(&line, &len, fptr)) != -1) {
 								
-								if (startsWith2(line, "Identificador único:")) {
+								if (startsWith2(line, "Identificador Único:")) {
 									c2 = startsWith(line, idc2);
 									if (c2) {
 										break;
@@ -750,7 +791,8 @@ int main(int argc, char* argv[])
 									total2 += n;
 									bytesleft2 -= n;
 								}
-								
+								total += total2;
+								bytesleft -= total2;
 								
 							}
 							free(bufout2);
