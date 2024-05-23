@@ -214,11 +214,17 @@ int main(int argc, char* argv[])
 					
 					while (1) {
 						int total = 0;
-						int bytesleft = 1024; 
-						size_t len = 1024;
+						int bytesleft = 1024;
 						int j = 0;
+
+						// Conta a quantidade de caracteres '\0'
 						int c = 0;
+
+						// Verifica se já foram recebidos todos os dados necessários para
+						// processar a requisição
 						int f = 0;
+
+						// Identifica fechamento de conexão
 						int f2 = 0;
 						while (1) {
 							int total = 0;
