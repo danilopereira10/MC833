@@ -768,9 +768,8 @@ int main(int argc, char* argv[])
 								int len2 = bytesleft2;
 								while (total2 < len2) {
 								
-									if ((n = sendto(dsockfd, str2, 6 + min(bytesleft, bytesleft2), 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
+									if ((n = sendto(dsockfd, str2, bytesleft2, 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
 										printf("Erro no envio n=-1 op8 \n");
-										j++;
 										//skip packet
 										total2 = len2;
 										bytesleft2 = 0;
@@ -784,6 +783,7 @@ int main(int argc, char* argv[])
 									total2 += n;
 									bytesleft2 -= n;
 								}
+								j++;
 								total += total2;
 								bytesleft -= total2;
 								

@@ -259,6 +259,9 @@ int main(int argc, char* argv[]) {
 				fd_set readfds;
 				int total2 = 0;
 				char* bufin = malloc(1024*1024*10 * sizeof(char));
+				for (int i = 0; i< 1024*1024*10; i++) {
+					bufin[i] = '\0';
+				}
 				bytesleft = 1024*1024*10;
 				bufin[bytesleft-1] = '\0';
 				int rate = 1000;
