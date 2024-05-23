@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 				printf("Recebida conexão \n");
 				pid_t pid;
 				
-				// if ((pid = fork()) == 0) {
+				if ((pid = fork()) == 0) {
 					close(sockfd);
 					
 					
@@ -705,7 +705,7 @@ int main(int argc, char* argv[])
 
 					close(new_fd);
 					exit(0);
-				// }
+				}
 				 close(new_fd);
 				
 			} 

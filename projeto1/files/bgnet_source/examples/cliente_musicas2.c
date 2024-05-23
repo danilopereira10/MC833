@@ -265,7 +265,7 @@ int main(int argc, char* argv[]) {
 					FD_ZERO(&readfds);
 					FD_SET(dsockfd, &readfds);
 					int n2 = dsockfd+1;
-					tv.tv_sec =1;
+					tv.tv_sec =2;
 					tv.tv_usec = 0;
 					drv = select(n2, &readfds, NULL, NULL, &tv);
 					if (drv == -1) {
