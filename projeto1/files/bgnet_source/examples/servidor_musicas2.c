@@ -718,34 +718,39 @@ int main(int argc, char* argv[])
 							rewind(fptr);
 							fread(bufout2, 1, size, fptr);
 							int total = 0;
+							bytesleft = size;
 							
-							int n;
-							bufout2[size] = '\0';
-							len = size+1;
-							int bytesleft = size + (am+1) * 1007;
-							int am2 = bytesleft / 1007;
+							int j = 0;
 
 
-							while (j <= am2) {
+							while (j <= am) {
 								int s2 = 7;
 								char str[s2];
 								sprintf(str, "%06d", j);
 								char str2[6 + min(bytesleft, rate)];
 								memcpy(str2, str, 6);
 								strncat(str2, bufout2+total, min(bytesleft, rate));
-								j++;
-								if ((n = sendto(dsockfd, str2, s2 + min(bytesleft, rate), 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
-									printf("Erro no envio n=-1 op8 \n");
-									total += 1000;
-									bytesleft -= 1007;
-									continue;
+								int total2 = 0, bytesleft2 = 6 + min(bytesleft, rate);
+								int len2 = bytesleft2;
+								while (total2 < len2) {
+								
+									if ((n = sendto(dsockfd, str2, 6 + min(bytesleft, bytesleft2), 0, (struct sockaddr*)&dtheir_addr, daddr_len)) == -1 ) {
+										printf("Erro no envio n=-1 op8 \n");
+										j++;
+										//skip packet
+										total2 = len2;
+										bytesleft2 = 0;
+										continue;
+									}
+								
+									if (n != 1006) {
+										printf("opa\n");
+									}
+									printf("Enviados %d bytes \n", n);
+									total2 += n;
+									bytesleft2 -= n;
 								}
-								if (n != 1007) {
-									printf("opa\n");
-								}
-								printf("Enviados %d bytes \n", n);
-								total += n;
-								bytesleft -= n;
+								
 								
 							}
 							free(bufout2);
