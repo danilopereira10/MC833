@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -33,6 +34,21 @@ int min(int a, int b) {
 		return a;
 	}
 	return b;
+}
+
+int digits(int n) {
+	if (n <= 9) {
+		return n+1;
+	} else {
+		int d = (int) (log10(n) + 1);
+		int p = 1;
+		while (p <= n) {
+			p *= 10;
+		}
+		p /= 10;
+		p--;
+		return d * (n - p) + digits(p);
+	}
 }
 
 
@@ -758,6 +774,7 @@ int main(int argc, char* argv[])
 							fseek(fptr, 0, SEEK_SET);
 							rewind(fptr);
 							fread(bufout2, 1, size, fptr);
+							// size = size + 6*(am+1);
 							int total = 0;
 							int bytesleft = size;
 							
@@ -765,12 +782,15 @@ int main(int argc, char* argv[])
 
 
 							while (j <= am) {
+								if (j == 749) {
+									printf("opa\n");
+								}
 								int s2 = 7;
 								char str[s2];
 								sprintf(str, "%06d", j);
 								char str2[6 + min(bytesleft, rate)];
-								memcpy(str2, str, 6);
-								strncat(str2, bufout2+total, min(bytesleft, rate));
+								memcpy(str2, str, 7);
+								memcpy(str2+6, bufout2+total, min(bytesleft, rate));
 								int total2 = 0, bytesleft2 = 6 + min(bytesleft, rate);
 								int len2 = bytesleft2;
 								// Envia pacotes de tamanho máximo bytelefts2 = 1006 para evitar desalinhamento e consequentes descartes
@@ -791,9 +811,11 @@ int main(int argc, char* argv[])
 									total2 += n;
 									bytesleft2 -= n;
 								}
+								printf("%d\n", j);
+								printf("%d \n", bytesleft);
 								j++;
-								total += total2;
-								bytesleft -= total2;
+								total += total2 - 6;
+								bytesleft -= total2 - 6;
 								
 							}
 							free(bufout2);
