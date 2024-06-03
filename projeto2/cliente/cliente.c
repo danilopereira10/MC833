@@ -259,6 +259,7 @@ int main(int argc, char* argv[]) {
 				char buft[rate+6];
 				int high = 0;
 				int hs = 0;
+				int tt = 0;
 				while (1) {
 					struct timeval tv;
 					FD_ZERO(&readfds);
@@ -277,6 +278,7 @@ int main(int argc, char* argv[]) {
 						//printf("Timeout occurred! No data after 1 second. \n");
 					} else {
 						int n3 = recvfrom(dsockfd, buft, rate+6, 0, (struct sockaddr *)&their_addr, &addr_len);
+						
 						// A variável t representa número de sequẽncia inválido.
 						int t = 0;
 						for (int i = 0; (i < 6) && (i < n3); i++) {
@@ -291,6 +293,7 @@ int main(int argc, char* argv[]) {
 						if ((n3 <= 6) || t) {
 							continue;
 						}
+						tt += n3;
 						char n4[7];
 						memcpy(n4, buft, 6);
 						n4[6] = '\0';
@@ -313,6 +316,7 @@ int main(int argc, char* argv[]) {
 					}
 
 				}
+				// printf("%d\n", tt);
 				FILE* fptr = fopen(filename, "wb");
 				high++;
 				fwrite(bufin, 1, high, fptr);
