@@ -236,7 +236,6 @@ int main(int argc, char* argv[]) {
 							break;
 						}
 					}
-					printf(bufin);
 				}
 			} else {
 				while (total < len) {
@@ -257,7 +256,7 @@ int main(int argc, char* argv[]) {
 				bytesleft = 1024*1024*10;
 				bufin[bytesleft-1] = '\0';
 				int rate = 1000;
-				char buft[rate];
+				char buft[rate+6];
 				int high = 0;
 				int hs = 0;
 				while (1) {
@@ -265,11 +264,11 @@ int main(int argc, char* argv[]) {
 					FD_ZERO(&readfds);
 					FD_SET(dsockfd, &readfds);
 					int n2 = dsockfd+1;
-					tv.tv_sec =2;
+					tv.tv_sec = 2;
 					tv.tv_usec = 0;
 					drv = select(n2, &readfds, NULL, NULL, &tv);
 					if (drv == -1) {
-						perror("select");
+						perror("select");	
 						bufin[total2] = '\0';
 						break;
 					} else if (drv == 0) {
@@ -277,7 +276,7 @@ int main(int argc, char* argv[]) {
 						break;
 						//printf("Timeout occurred! No data after 1 second. \n");
 					} else {
-						int n3 = recvfrom(dsockfd, buft, rate, 0, (struct sockaddr *)&their_addr, &addr_len);
+						int n3 = recvfrom(dsockfd, buft, rate+6, 0, (struct sockaddr *)&their_addr, &addr_len);
 						// A variável t representa número de sequẽncia inválido.
 						int t = 0;
 						for (int i = 0; (i < 6) && (i < n3); i++) {
@@ -297,14 +296,14 @@ int main(int argc, char* argv[]) {
 						n4[6] = '\0';
 						// Converte de string para inteiro.
 						int seq = (int) strtol(n4, (char**) NULL, 10);
-						int i4 = 0;
+						int i4 = 6;
 						hs = max(hs, seq);
 						
 
-						while ((i4 + 6) < n3-1) {
+						while (i4 < n3) {
 							if (seq * rate + i4 < 1024*1024*10-1) {
 								// Coloca os dados recebidos no número de sequẽncia correspondente.
-								bufin[seq * rate + i4] = buft[i4 + 6];
+								bufin[seq * rate + i4] = buft[i4];
 							}
 							// A variável é utilizada como uma forma rudimentar de auferir o tamanho real da música,
 							// ao invés de utilizar o tamanho 1024*1024*10 do tamanho do vetor bufin.
@@ -361,7 +360,6 @@ int main(int argc, char* argv[]) {
 					break;
 				 }
             }
-            printf(bufin);
             
 		}
 	}
