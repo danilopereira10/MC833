@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 	/* essas variáveis são utilizadas para recebimento de dados pela porta UDP.
 	Elas são declaradas força do laço
 	*/
-	int i2 = 1, i5 = 0;
+	int i2 = 1, counter3 = 0;
 	while (1) {
 
 		/* Preparação de variáveis para select
@@ -192,10 +192,10 @@ int main(int argc, char* argv[])
 		int totalBytesSent = 0;
 		if (datagramRv == -1) {
 			perror("select");
-			i5 = 0;
+			counter3 = 0;
 			i2 = 1;
 		} else if (datagramRv == 0) {
-			i5 = 0;
+			counter3 = 0;
 			i2 = 1;
 			//Nenhum dado ou pedido de conexão recebidos
 			//printf("Timeout occurred! No data after 1 second. \n");
@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
 							identifier = atoi(identifierString);
 							char identifierStringWithPrefix[1024];
 							char buf2[1024];
-							int i3 = 0, i4 = 0, previousI3 = 0;
+							int whereToWriteTheNextCharacter = 0, counter2 = 0, previousWhereToWriteTheNextCharacter = 0;
 							int lineLength = 0;
 							snprintf(identifierStringWithPrefix, 1024, "Identificador Único: %d\n", identifier);
 							int hasTheSameIdentifierReceivedInInput = 0, lineStartsWithUniqueIdentifierString = 0;
@@ -324,39 +324,39 @@ int main(int argc, char* argv[])
 								if (startsWith(line, "Identificador Único:")) {
 									if (hasTheSameIdentifierReceivedInInput) {
 										lineStartsWithUniqueIdentifierString = 1;
-										previousI3 = i3;
+										previousWhereToWriteTheNextCharacter = whereToWriteTheNextCharacter;
 										break;
 
 									}
-									i3 = previousI3;
+									whereToWriteTheNextCharacter = previousWhereToWriteTheNextCharacter;
 									hasTheSameIdentifierReceivedInInput = startsWith(line, identifierStringWithPrefix);
 								}
 
-								i4 = 0;
-								while (line[i4] != '\0') {
-									buf2[i3] = line[i4];
-									i3++;
-									i4++;
+								counter2 = 0;
+								while (line[counter2] != '\0') {
+									buf2[whereToWriteTheNextCharacter] = line[counter2];
+									whereToWriteTheNextCharacter++;
+									counter2++;
 								}
 							}
-							buf2[i3] = '\0';
-							int i5 = 0;
-							while (i5 < i3) {
-								bufferToBeSentToClient[i5] = buf2[i5];
-								i5++;
+							buf2[whereToWriteTheNextCharacter] = '\0';
+							int counter3 = 0;
+							while (counter3 < whereToWriteTheNextCharacter) {
+								bufferToBeSentToClient[counter3] = buf2[counter3];
+								counter3++;
 							}
-							if (i5 == 0) {
+							if (counter3 == 0) {
 								bufferToBeSentToClient[0] = '\0';
 							}
 							if (!lineStartsWithUniqueIdentifierString) {
-								i3 = 0;
+								whereToWriteTheNextCharacter = 0;
 							}
 							int bytesReceived;
-							bufferToBeSentToClient[i3] = '\0';
-							lineLength = i3+1;
-							int bytesRemainingToBeSent = lineLength;
+							bufferToBeSentToClient[whereToWriteTheNextCharacter] = '\0';
+							int amountOfBytesToBeSent = whereToWriteTheNextCharacter+1;
+							int bytesRemainingToBeSent = amountOfBytesToBeSent;
 
-							while (totalBytesSent < lineLength) {
+							while (totalBytesSent < amountOfBytesToBeSent) {
 								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+total, bytesRemainingToBeSent, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
@@ -402,11 +402,11 @@ int main(int argc, char* argv[])
 							}
 
 							buf2[i3] = '\0';
-							int i5 = 0;
+							int counter3 = 0;
 							if (i3) {
-								while (i5 < i3) {
-									bufferToBeSentToClient[i5] = buf2[i5];
-									i5++;
+								while (counter3 < i3) {
+									bufferToBeSentToClient[counter3] = buf2[counter3];
+									counter3++;
 								}
 							} else {
 								bufferToBeSentToClient[0] = '\0';
@@ -467,11 +467,11 @@ int main(int argc, char* argv[])
 								}
 							}
 							buf2[i3] = '\0';
-							int i5 = 0;
+							int counter3 = 0;
 							if (i3) {
-								while (i5 < i3) {
-									bufferToBeSentToClient[i5] = buf2[i5];
-									i5++;
+								while (counter3 < i3) {
+									bufferToBeSentToClient[counter3] = buf2[counter3];
+									counter3++;
 								}
 							} else {
 								bufferToBeSentToClient[0] = '\0';
@@ -481,10 +481,10 @@ int main(int argc, char* argv[])
 							}
 							int bytesReceived;
 							bufferToBeSentToClient[i3] = '\0';
-							lineLength = i3+1;
-							int bytesRemainingToBeSent = lineLength;
+							int amountOfBytesToBeSent = i3+1;
+							int bytesRemainingToBeSent = amountOfBytesToBeSent;
 
-							while (total < lineLength) {
+							while (total < amountOfBytesToBeSent) {
 								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+total, bytesRemainingToBeSent, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
@@ -555,11 +555,11 @@ int main(int argc, char* argv[])
 								}
 							}
 							buf2[i3] = '\0';
-							int i5 = 0;
+							int counter3 = 0;
 							if (i3) {
-								while (i5 < i3) {
-									bufferToBeSentToClient[i5] = buf2[i5];
-									i5++;
+								while (counter3 < i3) {
+									bufferToBeSentToClient[counter3] = buf2[counter3];
+									counter3++;
 								}
 							} else {
 								bufferToBeSentToClient[0] = '\0';
@@ -593,7 +593,7 @@ int main(int argc, char* argv[])
 							identifier = atoi(identifierString);
 							char identifierStringWithPrefix[1024];
 							char buf2[4096];
-							int i3 = 0, i4 = 0, previousI3 = 0;
+							int whereToWriteTheNextCharacter = 0, counter2 = 0, previousWhereToWriteTheNextCharacter = 0;
 							snprintf(identifierStringWithPrefix, 1024, "Identificador Único: %d\n", identifier);
 							int lineLength = 0;
 							int hasTheSameIdentifierReceivedInInput = 0;
@@ -601,9 +601,9 @@ int main(int argc, char* argv[])
 
 								if (startsWith(line, "Identificador Único:")) {
 									if (hasTheSameIdentifierReceivedInInput) {
-										i3 = previousI3;
+										whereToWriteTheNextCharacter = previousWhereToWriteTheNextCharacter;
 									}
-									previousI3 = i3;
+									previousWhereToWriteTheNextCharacter = whereToWriteTheNextCharacter;
 									// i3 = pi3;
 									hasTheSameIdentifierReceivedInInput = startsWith(line, identifierStringWithPrefix);
 								}
@@ -611,26 +611,26 @@ int main(int argc, char* argv[])
 									continue;
 								}
 
-								i4 = 0;
-								while (line[i4] != '\0') {
-									buf2[i3] = line[i4];
-									i3++;
-									i4++;
+								counter2 = 0;
+								while (line[counter2] != '\0') {
+									buf2[whereToWriteTheNextCharacter] = line[counter2];
+									whereToWriteTheNextCharacter++;
+									counter2++;
 								}
 							}
-							buf2[i3] = '\0';
-							int i5 = 0;
-							if (i3) {
-								while (i5 < i3) {
-									bufferToBeSentToClient[i5] = buf2[i5];
-									i5++;
+							buf2[whereToWriteTheNextCharacter] = '\0';
+							int counter3 = 0;
+							if (whereToWriteTheNextCharacter) {
+								while (counter3 < whereToWriteTheNextCharacter) {
+									bufferToBeSentToClient[counter3] = buf2[counter3];
+									counter3++;
 								}
 							} else {
 								bufferToBeSentToClient[0] = '\0';
 							}
 							fclose(filePointer);
 							filePointer = fopen("musicas", "w");
-							fwrite(bufferToBeSentToClient, 1, i3, filePointer);
+							fwrite(bufferToBeSentToClient, 1, whereToWriteTheNextCharacter, filePointer);
 						}  else if (inputBuffer[0] == '1') {
 							// Copia todo o arquivo de músicas e adiciona a nova música se já não houver outra música com o mesmo identificador
 							// con = identificador + informações
@@ -677,18 +677,18 @@ int main(int argc, char* argv[])
 							if (c2) {
 								// Já encontrada música com mesmo identificador
 							} else {
-								int i5 = 0;
-								while (con[i5] != '\0') {
-									buf2[i3] = con[i5];
+								int counter3 = 0;
+								while (con[counter3] != '\0') {
+									buf2[i3] = con[counter3];
 									i3++;
-									i5++;
+									counter3++;
 								}
 								buf2[i3] = '\0';
-								i5 = 0;
+								counter3 = 0;
 								if (i3) {
-									while (i5 < i3) {
-										bufferToBeSentToClient[i5] = buf2[i5];
-										i5++;
+									while (counter3 < i3) {
+										bufferToBeSentToClient[counter3] = buf2[counter3];
+										counter3++;
 									}
 								} else {
 									bufferToBeSentToClient[0] = '\0';
@@ -724,12 +724,12 @@ int main(int argc, char* argv[])
 				}
 				total += bytesReceived;
 				// bytesleft -= n;
-				i5 = 0;
+				counter3 = 0;
 				i2 = 1;
 				char idc[1024];
 				int id;
-				while (i5 < total) {
-					if (inputBuffer[i5] == '\0') {
+				while (counter3 < total) {
+					if (inputBuffer[counter3] == '\0') {
 						while (inputBuffer[i2] != '\0') {
 							idc[i2-1] = inputBuffer[i2];
 							i2++;
@@ -815,11 +815,11 @@ int main(int argc, char* argv[])
 						total = 0;
 						inputBuffer[0] = '\0';
 						inputBuffer[1] = '\0';
-						i5 = 0;
+						counter3 = 0;
 						i2 = 1;
 						break;
 					}
-					i5++;
+					counter3++;
 				}
 			}
 		}
