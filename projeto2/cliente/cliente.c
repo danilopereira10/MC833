@@ -365,7 +365,7 @@ int main(int argc, char* argv[]) {
 					break;
 				 }
             }
-			print(bufin);
+			printf(bufin);
             
 		}
 	}
