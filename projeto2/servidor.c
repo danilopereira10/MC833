@@ -36,20 +36,6 @@ int min(int a, int b) {
 	return b;
 }
 
-int digits(int n) {
-	if (n <= 9) {
-		return n+1;
-	} else {
-		int d = (int) (log10(n) + 1);
-		int p = 1;
-		while (p <= n) {
-			p *= 10;
-		}
-		p /= 10;
-		p--;
-		return d * (n - p) + digits(p);
-	}
-}
 
 
 
