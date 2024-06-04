@@ -236,6 +236,7 @@ int main(int argc, char* argv[]) {
 							break;
 						}
 					}
+					printf(bufin);
 				}
 			} else {
 				while (total < len) {
@@ -364,6 +365,7 @@ int main(int argc, char* argv[]) {
 					break;
 				 }
             }
+			print(bufin);
             
 		}
 	}
