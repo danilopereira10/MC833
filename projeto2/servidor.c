@@ -766,7 +766,7 @@ int main(int argc, char* argv[])
 							
 							int j = 0;
 
-
+							int tt = 0;
 							while (j <= am) {
 								if (j == 749) {
 									printf("opa\n");
@@ -787,9 +787,11 @@ int main(int argc, char* argv[])
 										//skip packet
 										total2 = len2;
 										bytesleft2 = 0;
+										
 										continue;
 									}
 								
+									tt += n;
 									if (n != 1006) {
 										// printf("opa\n");
 									}
@@ -805,6 +807,7 @@ int main(int argc, char* argv[])
 								
 							}
 							free(bufout2);
+							printf("tt: %d \n", tt);
 							
 						}
 						fclose(fptr);

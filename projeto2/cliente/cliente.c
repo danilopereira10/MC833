@@ -292,6 +292,7 @@ int main(int argc, char* argv[]) {
 						// Se só tiver recebido números de sequẽncia ou houver menos número do que o necessário
 						// para identificar qual é o número de sequência, então pula
 						if ((n3 <= 6) || t) {
+							printf("opa\n");
 							continue;
 						}
 						tt += n3;
@@ -317,7 +318,7 @@ int main(int argc, char* argv[]) {
 					}
 
 				}
-				// printf("%d\n", tt);
+				printf("%d\n", tt);
 				FILE* fptr = fopen(filename, "wb");
 				high++;
 				fwrite(bufin, 1, high, fptr);
