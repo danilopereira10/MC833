@@ -807,7 +807,7 @@ int main(int argc, char* argv[])
 							free(bufout2);
 							
 						}
-						
+						fclose(fptr);
 						total = 0;
 						buf[0] = '\0';
 						buf[1] = '\0';
