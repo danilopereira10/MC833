@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
 				printf("Recebida conexão \n");
 				pid_t pid;
 				
-				if ((pid = fork()) == 0) {
+				// if ((pid = fork()) == 0) {
 					close(tcpSockfd);
 					
 					
@@ -338,6 +338,9 @@ int main(int argc, char* argv[])
 									counter5++;
 									counter6++;
 								}	
+							}
+							if (identifierMatchesSearchedOne) {
+								foundAtLeastOneMusicThatMatches = 1;
 							}
 							buf2[counter5] = '\0'; 
 							int counter7 = 0;
@@ -639,10 +642,12 @@ int main(int argc, char* argv[])
 							// idc = "identificador" + o número
 							char identifierString[1024];
 							int index = 1;
-							while (inputBuffer[index] != ' ') {
+							while (inputBuffer[index] != ':') {
 								content[index-1] = inputBuffer[index];
 								index++;
 							}
+							content[index-1] = inputBuffer[index];
+							index++;
 							content[index-1] = inputBuffer[index];
 							index++;
 							int index2 = 0;
@@ -650,6 +655,7 @@ int main(int argc, char* argv[])
 								identifierString[index2] = inputBuffer[index];
 								content[index-1] = inputBuffer[index];
 								index++;
+								index2++;
 							}
 							while (inputBuffer[index] != '\0') {
 								content[index-1] = inputBuffer[index];
@@ -687,8 +693,6 @@ int main(int argc, char* argv[])
 								int counter9 = 0;
 								buf2[counter8] = '\n';
 								counter8++;
-								buf2[counter8] = '\n';
-								counter8++;
 								while (content[counter9] != '\0') {
 									buf2[counter8] = content[counter9];
 									counter8++;
@@ -717,10 +721,10 @@ int main(int argc, char* argv[])
 					}
 
 
-					close(new_fd);
-					exit(0);
-				}
-				 close(new_fd);
+				// 	close(new_fd);
+				// 	exit(0);
+				// }
+				//  close(new_fd);
 				
 			} 
 			if (FD_ISSET(udpSocket, &readfds)) {
