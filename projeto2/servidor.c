@@ -1,7 +1,7 @@
 /*
 ** server.c -- a stream socket server demo
 */
-// #define _XOPEN_SOURCE
+
 #define _XOPEN_SOURCE 700
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ int min(int a, int b) {
 
 
 
-/*Método para filtragem (verificar se identificado bate com identificador,
+/*Método para filtragem (verificar se identificado bate com identificador, 
 tipo de música bate com tipo de música, etc...)*/
 int startsWith(const char *a, const char *b) {
 	if (strlen(a) >= strlen(b)) {
@@ -53,128 +53,128 @@ int startsWith(const char *a, const char *b) {
 
 int main(int argc, char* argv[])
 {
+	
 
-
-	struct addrinfo tcpHints, *res;
-	int tcpSocket;
+	struct addrinfo tcpHints, *tcpRes;
+	int tcpSockfd;
 	char inputBuffer[1024];
-	char bufferToBeSentToClient[4096];
-	int bytesReceived;
-
+	char outputBuffer[4096];
+	int bytesReceivedOrSent;
+    
     struct sockaddr_storage their_addr;
 
 	memset(&tcpHints, 0, sizeof tcpHints);
-	tcpHints.ai_family = AF_UNSPEC;
+	tcpHints.ai_family = AF_UNSPEC;  
 	tcpHints.ai_socktype = SOCK_STREAM;
 	tcpHints.ai_flags = AI_PASSIVE;
 
 
-	int rv;
-
+	int tcpRv;
+    
 	char* porttcp = argv[1];
 	char* portudp = argv[2];
-    if ((rv = getaddrinfo(NULL, argv[1], &tcpHints, &res)) != 0 ) {
-        fprintf(stderr, "getaddrinfo tcp: %s \n", gai_strerror(rv));
+    if ((tcpRv = getaddrinfo(NULL, argv[1], &tcpHints, &tcpRes)) != 0 ) {
+        fprintf(stderr, "getaddrinfo tcp: %s \n", gai_strerror(tcpRv));
     }
 
-    struct addrinfo *p;
+    struct addrinfo *tcpP;
 	//tentativa de criação e binding de socket
-    for (p = res; p != NULL; p = p->ai_next) {
-        if ((tcpSocket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+    for (tcpP = tcpRes; tcpP != NULL; tcpP = tcpP->ai_next) {
+        if ((tcpSockfd = socket(tcpP->ai_family, tcpP->ai_socktype, tcpP->ai_protocol)) == -1) {
             perror("tcp socket \n");
             continue;
         }
 		int yes = 1;
-		if (setsockopt(tcpSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
+		if (setsockopt(tcpSockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
 			printf("erro no setsockopt \n");
 		}
-		if (bind(tcpSocket, p->ai_addr, p->ai_addrlen) == -1) {
-			close(tcpSocket);
+		if (bind(tcpSockfd, tcpP->ai_addr, tcpP->ai_addrlen) == -1) {
+			close(tcpSockfd);
 			printf("erro no bind \n");
 			continue;
 		}
         break;
     }
-
-
-
-	if (listen(tcpSocket, 10) == -1) {
+    
+	
+	
+	if (listen(tcpSockfd, 10) == -1) {
 		printf("erro no listen \n");
 	}
     socklen_t addr_size;
     addr_size = sizeof their_addr;
 
-	/* socket para UDP. Abaixo seguem todas as variáveis e criações
+	/* socket para UDP. Abaixo seguem todas as variáveis e criações 
 		correspondentes.
 	*/
-	int datagramSocket;
-	struct addrinfo datagramHints, *dservinfo, *dp;
-	int datagramRv;
-	int datagramNumbytes;
-	struct sockaddr_storage datagramClient_addr;
+	int udpSocket;
+	struct addrinfo udpHints, *udpServinfo, *udpP;
+	int udpRv;
+	int udpNumbytes;
+	struct sockaddr_storage udpClient_addr;
 	// char dbuf[MAXBUFLEN];
-	socklen_t datagramClientaddr_len;
+	socklen_t udpClientaddr_len;
 	char ds[INET6_ADDRSTRLEN];
 
-	memset(&datagramHints, 0, sizeof datagramHints);
-	datagramHints.ai_family = AF_UNSPEC;
-	datagramHints.ai_socktype = SOCK_DGRAM;
-	datagramHints.ai_flags = AI_PASSIVE;
+	memset(&udpHints, 0, sizeof udpHints);
+	udpHints.ai_family = AF_UNSPEC;
+	udpHints.ai_socktype = SOCK_DGRAM;
+	udpHints.ai_flags = AI_PASSIVE;
 
-	if ((datagramRv = getaddrinfo(NULL, argv[2], &datagramHints, &dservinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(datagramRv));
+	if ((udpRv = getaddrinfo(NULL, argv[2], &udpHints, &udpServinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udpRv));
 		return 1;
 	}
 
-
+	
 	//Tentativa de criação socket UDP
-	for (dp = dservinfo; dp != NULL; dp=dp->ai_next) {
-		if ((datagramSocket = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
+	for (udpP = udpServinfo; udpP != NULL; udpP=udpP->ai_next) {
+		if ((udpSocket = socket(udpP->ai_family, udpP->ai_socktype, udpP->ai_protocol)) == -1) {
 			perror("listener: socket");
 			continue;
 		}
-		int yes2 = 1;
-		if (setsockopt(datagramSocket, SOL_SOCKET, SO_REUSEADDR, &yes2, sizeof yes2) == -1) {
+		int yes = 1;
+		if (setsockopt(udpSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1) {
 			printf("erro no setsockopt 2\n");
 		}
 
-		if ((bind(datagramSocket, dp->ai_addr, dp->ai_addrlen)) == -1) {
-			close(datagramSocket);
+		if ((bind(udpSocket, udpP->ai_addr, udpP->ai_addrlen)) == -1) {
+			close(udpSocket);
 			perror("listener: bind");
 			continue;
 		}
 		break;
 	}
 
-	if (dp == NULL) {
+	if (udpP == NULL) {
 		fprintf(stderr, "listener: failed to bind socket \n");
 		return 2;
 	}
-	freeaddrinfo(dservinfo);
+	freeaddrinfo(udpServinfo);
+	
+	udpClientaddr_len = sizeof udpClient_addr;
 
-	datagramClientaddr_len = sizeof datagramClient_addr;
-
-
+	
 	/* Tornar socket UDP não bloqueante.
 		No manual do Beej.s diz que o select pode dizer que o socket
 		está pronto para "recv" no Linux mesmo sem estar. Eles sugerem
 		o método fcntl para evitar o bloqueio do socket.
 	*/
 
-	fcntl(tcpSocket, F_SETFL, O_NONBLOCK);
-	fcntl(datagramSocket, F_SETFL, O_NONBLOCK);
+	fcntl(tcpSockfd, F_SETFL, O_NONBLOCK);
+	fcntl(udpSocket, F_SETFL, O_NONBLOCK);
 
 	fd_set readfds;
 
-
-
+	
+	
 
 	/* essas variáveis são utilizadas para recebimento de dados pela porta UDP.
 	Elas são declaradas força do laço
 	*/
-	int i2 = 1, counter3 = 0;
+	int counter = 1, counter2 = 0;
 	while (1) {
-
+		
 		/* Preparação de variáveis para select
 			O select atua entre receber conexões na porta TCP ou
 			receber requisições pela porta UDP
@@ -182,87 +182,87 @@ int main(int argc, char* argv[])
 		struct timeval tv;
 		FD_ZERO(&readfds);
 
-		FD_SET(tcpSocket, &readfds);
-		FD_SET(datagramSocket, &readfds);
-		int highestSocket = max(datagramSocket,tcpSocket) + 1;
+		FD_SET(tcpSockfd, &readfds);
+		FD_SET(udpSocket, &readfds);
+		int highestSocket = max(udpSocket,tcpSockfd) + 1;
 		//Intervalo de 1 segundo.
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
-		datagramRv = select(highestSocket, &readfds, NULL, NULL, &tv);
-		int totalBytesSent = 0;
-		if (datagramRv == -1) {
+		udpRv = select(highestSocket, &readfds, NULL, NULL, &tv);
+		int totalBytesReceivedOrSent = 0;
+		if (udpRv == -1) {
 			perror("select");
-			counter3 = 0;
-			i2 = 1;
-		} else if (datagramRv == 0) {
-			counter3 = 0;
-			i2 = 1;
+			counter2 = 0;
+			counter = 1;
+		} else if (udpRv == 0) {
+			counter2 = 0;
+			counter = 1;
 			//Nenhum dado ou pedido de conexão recebidos
 			//printf("Timeout occurred! No data after 1 second. \n");
 		} else {
-
-			if (FD_ISSET(tcpSocket, &readfds)) {
+			
+			if (FD_ISSET(tcpSockfd, &readfds)) {
 				//Select apontou recebimento de pedido de conexão
 				int new_fd;
-				if ((new_fd = accept(tcpSocket, (struct sockaddr *) &their_addr, &addr_size)) == -1) {
+				if ((new_fd = accept(tcpSockfd, (struct sockaddr *) &their_addr, &addr_size)) == -1) {
 					// Não foi recebido pedido de conexão
 					continue;
 				}
-
+				
 				printf("Recebida conexão \n");
 				pid_t pid;
-
+				
 				if ((pid = fork()) == 0) {
-					close(tcpSocket);
-
-
+					close(tcpSockfd);
+					
+					
 					while (1) {
 						int totalBytesSent = 0;
-						int bytesRemainingToBeSent = 1024;
-						int counter = 0;
+						int bytesLeftToBeSent = 1024;
+						int counter3 = 0;
 
 						// Conta a quantidade de caracteres '\0'
-						int nullcharacterCounter = 0;
+						int nullCharacterCount = 0;
 
 						// Verifica se já foram recebidos todos os dados necessários para
 						// processar a requisição
-						int receivedEnoughDataToProcessRequest = 0;
+						int hasEnoughDataToProcessRequest = 0;
 
 						// Identifica fechamento de conexão
 						int connectionClosed = 0;
 						while (1) {
-							int totalBytesSent = 0;
-							int bytesRemainingToBeSent = 1024;
-							bytesReceived = recv(new_fd, inputBuffer+0, 1024, 0);
-							printf("recv()'d %d bytes of data in buf\n", bytesReceived);
-							if ((bytesReceived == -1)) {
+							int totalBytesToBeSent = 0;
+							int bytesLeftToBeSent = 1024;
+							bytesReceivedOrSent = recv(new_fd, inputBuffer+0, 1024, 0);
+							printf("recv()'d %d bytes of data in buf\n", bytesReceivedOrSent);
+							if ((bytesReceivedOrSent == -1)) { 
 								// Erro no recebimento de dados
-							} else if (bytesReceived == 0) {
+							} else if (bytesReceivedOrSent == 0) {
 								connectionClosed = 1;
 								break;
 							} else {
-								totalBytesSent += bytesReceived;
-								bytesRemainingToBeSent -= bytesReceived;
-								while (counter < totalBytesSent) {
-									if ((inputBuffer[counter] == '\0')) {
+								totalBytesToBeSent += bytesReceivedOrSent;
+								bytesLeftToBeSent -= bytesReceivedOrSent;
+								while (counter3 < totalBytesToBeSent) {
+									if ((inputBuffer[counter3] == '\0')) {
 										//A variável c conta a quantidade de '\0'
 										/* Os '\0' separam os dados que foram enviados pelo
 										cliente */
-										nullcharacterCounter++;
+										nullCharacterCount++;
 									}
-									counter++;
+									counter3++;
 									// Apenas a operação '4' recebe dois dados.
 									// buf[0] Sempre é a operação (varia de '1' a '8').
-									if (nullcharacterCounter && inputBuffer[0] != '4') {
-										receivedEnoughDataToProcessRequest = 1;
+									if (nullCharacterCount && inputBuffer[0] != '4') {
+										hasEnoughDataToProcessRequest = 1;
 										break;
-									} else if (nullcharacterCounter == 2) {
-										receivedEnoughDataToProcessRequest = 1;
+									} else if (nullCharacterCount == 2) {
+										hasEnoughDataToProcessRequest = 1;
 										break;
 									}
 								}
 							}
-							if (receivedEnoughDataToProcessRequest || connectionClosed) {
+							if (hasEnoughDataToProcessRequest || connectionClosed) {
 								// Recebidos todos os dados ou conexão finalizada
 								break;
 							}
@@ -276,433 +276,444 @@ int main(int argc, char* argv[])
 						// Abrindo arquivo da descrição das músicas.
 						FILE *filePointer;
 						filePointer = fopen("musicas", "r");;
-
-						long fileSizeInBytes;
+						
+						long fileSize;
 						char* line = NULL;
-						ssize_t read;
+						ssize_t readError;
 						if (inputBuffer[0] == '7') {
 							//Copia todo o conteúdo do arquivo e retorna para o cliente
 							fseek(filePointer, 0, SEEK_END);
-							fileSizeInBytes = ftell(filePointer);
+							fileSize = ftell(filePointer);
 							fseek(filePointer, 0, SEEK_SET);
 							rewind(filePointer);
-							fread(bufferToBeSentToClient, 1, fileSizeInBytes, filePointer);
+							fread(outputBuffer, 1, fileSize, filePointer);
 							int totalBytesSent = 0;
-
-							int bytesReceived;
-							bufferToBeSentToClient[fileSizeInBytes] = '\0';
-							int len = fileSizeInBytes+1;
-							int bytesRemainingToBeSent = len;
-
-							while (totalBytesSent < len) {
-								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+totalBytesSent, bytesRemainingToBeSent, 0)) == -1 ) {
+							
+							int bytesSent;
+							outputBuffer[fileSize] = '\0';
+							int totalBytesToBeSent = fileSize+1;
+							int bytesleft = totalBytesToBeSent;
+							
+							while (totalBytesSent < totalBytesToBeSent) {
+								if ((bytesSent = send(new_fd, outputBuffer+totalBytesSent, bytesleft, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
-								printf("Enviados %d bytes \n", bytesReceived);
-								totalBytesSent += bytesReceived;
-								bytesRemainingToBeSent -= bytesReceived;
+								printf("Enviados %d bytes \n", bytesSent);
+								totalBytesSent += bytesSent;
+								bytesleft -= bytesSent;
 							}
 						} else if (inputBuffer[0] == '6') {
 							// Faz match da linha que possuir mesmo identificador e retorna linha para o cliente
 							int identifier;
 							char identifierString[1024];
-							int i2 = 1;
-							while (inputBuffer[i2] != '\0') {
-								identifierString[i2-1] = inputBuffer[i2];
-								i2++;
+							int counter4 = 1;
+							while (inputBuffer[counter4] != '\0') {
+								identifierString[counter4-1] = inputBuffer[counter4];
+								counter4++;
 							}
-							identifierString[i2-1] = inputBuffer[i2];
+							identifierString[counter4-1] = inputBuffer[counter4];
 							identifier = atoi(identifierString);
 							char identifierStringWithPrefix[1024];
 							char buf2[1024];
-							int whereToWriteTheNextCharacter = 0, counter2 = 0, previousWhereToWriteTheNextCharacter = 0;
-							int lineLength = 0;
+							int counter5 = 0, counter6 = 0, lineLength = 0;
+							int amountOfBytesToBeSent = 0;
 							snprintf(identifierStringWithPrefix, 1024, "Identificador Único: %d\n", identifier);
-							int hasTheSameIdentifierReceivedInInput = 0, lineStartsWithUniqueIdentifierString = 0;
-							while ((read = getline(&line, &lineLength, filePointer)) != -1) {
-								printf(line);
+							int identifierMatchesSearchedOne = 0, foundAtLeastOneMusicThatMatches = 0;
+							while ((readError = getline(&line, &lineLength, filePointer)) != -1) {
+								// printf(line);
 								if (startsWith(line, "Identificador Único:")) {
-									if (hasTheSameIdentifierReceivedInInput) {
-										lineStartsWithUniqueIdentifierString = 1;
-										previousWhereToWriteTheNextCharacter = whereToWriteTheNextCharacter;
+									if (identifierMatchesSearchedOne) {
+										foundAtLeastOneMusicThatMatches = 1;
+										amountOfBytesToBeSent = counter5;
 										break;
-
+										
 									}
-									whereToWriteTheNextCharacter = previousWhereToWriteTheNextCharacter;
-									hasTheSameIdentifierReceivedInInput = startsWith(line, identifierStringWithPrefix);
+									counter5 = amountOfBytesToBeSent;
+									identifierMatchesSearchedOne = startsWith(line, identifierStringWithPrefix);
 								}
-
-								counter2 = 0;
-								while (line[counter2] != '\0') {
-									buf2[whereToWriteTheNextCharacter] = line[counter2];
-									whereToWriteTheNextCharacter++;
-									counter2++;
-								}
+								
+								counter6 = 0;
+								while (line[counter6] != '\0') {
+									buf2[counter5] = line[counter6];
+									counter5++;
+									counter6++;
+								}	
 							}
-							buf2[whereToWriteTheNextCharacter] = '\0';
-							int counter3 = 0;
-							while (counter3 < whereToWriteTheNextCharacter) {
-								bufferToBeSentToClient[counter3] = buf2[counter3];
-								counter3++;
+							buf2[counter5] = '\0'; 
+							int counter7 = 0;
+							while (counter7 < counter5) {
+								outputBuffer[counter7] = buf2[counter7];
+								counter7++;
 							}
-							if (counter3 == 0) {
-								bufferToBeSentToClient[0] = '\0';
+							if (counter7 == 0) {
+								outputBuffer[0] = '\0';
 							}
-							if (!lineStartsWithUniqueIdentifierString) {
-								whereToWriteTheNextCharacter = 0;
+							if (!foundAtLeastOneMusicThatMatches) {
+								counter5 = 0;
 							}
-							int bytesReceived;
-							bufferToBeSentToClient[whereToWriteTheNextCharacter] = '\0';
-							int amountOfBytesToBeSent = whereToWriteTheNextCharacter+1;
-							int bytesRemainingToBeSent = amountOfBytesToBeSent;
-
+							int bytesSent;
+							outputBuffer[counter5] = '\0';
+							amountOfBytesToBeSent = counter5+1;
+							int bytesleft = amountOfBytesToBeSent;
+							
 							while (totalBytesSent < amountOfBytesToBeSent) {
-								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+total, bytesRemainingToBeSent, 0)) == -1 ) {
+								if ((bytesSent = send(new_fd, outputBuffer+totalBytesSent, bytesleft, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
-								printf("Enviados %d bytes \n", bytesReceived);
-								total += bytesReceived;
-								bytesRemainingToBeSent -= bytesReceived;
+								printf("Enviados %d bytes \n", bytesSent);
+								totalBytesSent += bytesSent;
+								bytesleft -= bytesSent;
 							}
 
 						} else if (inputBuffer[0] == '5') {
 							// Faz match das músicas que possuem o mesmo tipo e retorna para o cliente
-							char tipo[1024];
-							int i2 = 1;
-							while (inputBuffer[i2] != '\0') {
-								tipo[i2-1] = inputBuffer[i2];
-								i2++;
+							char musicType[1024];
+							int index = 1;
+							while (inputBuffer[index] != '\0') {
+								musicType[index-1] = inputBuffer[index];
+								index++;
 							}
-							tipo[i2-1] = inputBuffer[i2];
-
-							char tipo2[1024];
+							musicType[index-1] = inputBuffer[index];
+							
+							char musicTypeWithPrefix[1024];
 							char buf2[1024];
-							int i3 = 0, i4 = 0, pi3 = 0;
-							snprintf(tipo2, 1024, "Tipo de música: %s\n", tipo);
-							int len = 0;
-							int c2 = 0, c3 = 0;
-							while ((read = getline(&line, &len, filePointer)) != -1) {
+							int counter = 0, counter2 = 0, countedAmountOfBytesToBeSent = 0;
+							snprintf(musicTypeWithPrefix, 1024, "Tipo de música: %s\n", musicType);
+							int bytesToBeSent = 0;
+							int matchedMusicType = 0, foundAtLeastOneMusicThatMatches = 0;
+							while ((readError = getline(&line, &bytesToBeSent, filePointer)) != -1) {
 								if (startsWith(line, "Tipo de música:")) {
-									c2 = startsWith(line, tipo2);
-									if (c2) {
-										c3 = 1;
-										pi3 = i3;
+									matchedMusicType = startsWith(line, musicTypeWithPrefix);
+									if (matchedMusicType) {
+										foundAtLeastOneMusicThatMatches = 1;
+										countedAmountOfBytesToBeSent = counter;
 									}
-									i3 = pi3;
+									counter = countedAmountOfBytesToBeSent;
 								}
-
+								
 								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
-									i4 = 0;
-									while (line[i4] != '\0') {
-										buf2[i3] = line[i4];
-										i3++;
-										i4++;
+									counter2 = 0;
+									while (line[counter2] != '\0') {
+										buf2[counter] = line[counter2];
+										counter++;
+										counter2++;
 									}
-								}
+								}	
 							}
-
-							buf2[i3] = '\0';
-							int counter3 = 0;
-							if (i3) {
-								while (counter3 < i3) {
-									bufferToBeSentToClient[counter3] = buf2[counter3];
-									counter3++;
+							
+							buf2[counter] = '\0'; 
+							int counter4 = 0;
+							if (counter) {
+								while (counter4 < counter) {
+									outputBuffer[counter4] = buf2[counter4];
+									counter4++;
 								}
 							} else {
-								bufferToBeSentToClient[0] = '\0';
+								outputBuffer[0] = '\0';
 							}
 
-							if (!c3) {
-								i3 = 0;
+							if (!foundAtLeastOneMusicThatMatches) {
+								counter = 0;
 							}
-							int bytesReceived;
-							bufferToBeSentToClient[i3] = '\0';
-							len = i3+1;
-							int bytesRemainingToBeSent = len;
-
-							while (total < len) {
-								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+total, bytesRemainingToBeSent, 0)) == -1 ) {
+							int bytesSent;
+							outputBuffer[counter] = '\0';
+							bytesToBeSent = counter+1;
+							int bytesleft = bytesToBeSent;
+							
+							while (totalBytesSent < bytesToBeSent) {
+								if ((bytesSent = send(new_fd, outputBuffer+totalBytesSent, bytesleft, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
-								printf("Enviados %d bytes \n", bytesReceived);
-								total += bytesReceived;
-								bytesRemainingToBeSent -= bytesReceived;
+								printf("Enviados %d bytes \n", bytesSent);
+								totalBytesSent += bytesSent;
+								bytesleft -= bytesSent;
 							}
 						} else if (inputBuffer[0] == '3') {
 							// Faz match das músicas que possuem o mesmo Ano de lançamento e retorna para o cliente
-							char ano[1024];
-							int i2 = 1;
-							while (inputBuffer[i2] != '\0') {
-								ano[i2-1] = inputBuffer[i2];
-								i2++;
+							char year[1024];
+							int index = 1;
+							while (inputBuffer[index] != '\0') {
+								year[index-1] = inputBuffer[index];
+								index++;
 							}
-							ano[i2-1] = inputBuffer[i2];
-
-							char ano2[1024];
+							year[index-1] = inputBuffer[index];
+							
+							char yearWithPrefix[1024];
 							char buf2[1024];
-							int i3 = 0, i4 = 0, pi3 = 0;
-							int anoint = atoi(ano);
-							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
-							int lineLength = 0;
-							int hasTheSameIdentifierReceivedInInput = 0, lineStartsWithUniqueIdentifierString = 0;
-							while ((read = getline(&line, &lineLength, filePointer)) != -1) {
+							int counter = 0, counter2 = 0, bytesToBeThoughtAbout = 0;
+							int yearAsInteger = atoi(year);
+							snprintf(yearWithPrefix, 1024, "Ano de lançamento: %d\n", yearAsInteger);
+							int variableForCounting = 0;
+							int matchesYear = 0, atLeastOneMatchFound = 0;
+							while ((readError = getline(&line, &variableForCounting, filePointer)) != -1) {
 								if (startsWith(line, "Ano de lançamento:")) {
-									hasTheSameIdentifierReceivedInInput = startsWith(line, ano2);
-									if (hasTheSameIdentifierReceivedInInput) {
-										lineStartsWithUniqueIdentifierString = 1;
-										pi3 = i3;
+									matchesYear = startsWith(line, yearWithPrefix);
+									if (matchesYear) {
+										atLeastOneMatchFound = 1;
+										bytesToBeThoughtAbout = counter;
 									}
-									i3 = pi3;
-
+									counter = bytesToBeThoughtAbout;
+									
 								}
-
+								
 
 								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
-									i4 = 0;
-									while (line[i4] != '\0') {
-										buf2[i3] = line[i4];
-										i3++;
-										i4++;
+									counter2 = 0;
+									while (line[counter2] != '\0') {
+										buf2[counter] = line[counter2];
+										counter++;
+										counter2++;
 									}
-								}
+								}	
 							}
-							buf2[i3] = '\0';
-							int counter3 = 0;
-							if (i3) {
-								while (counter3 < i3) {
-									bufferToBeSentToClient[counter3] = buf2[counter3];
-									counter3++;
+							buf2[counter] = '\0'; 
+							int counter4 = 0;
+							if (counter) {
+								while (counter4 < counter) {
+									outputBuffer[counter4] = buf2[counter4];
+									counter4++;
 								}
 							} else {
-								bufferToBeSentToClient[0] = '\0';
+								outputBuffer[0] = '\0';
 							}
-							if (!lineStartsWithUniqueIdentifierString) {
-								i3 = 0;
+							if (!atLeastOneMatchFound) {
+								counter = 0;
 							}
-							int bytesReceived;
-							bufferToBeSentToClient[i3] = '\0';
-							int amountOfBytesToBeSent = i3+1;
-							int bytesRemainingToBeSent = amountOfBytesToBeSent;
-
-							while (total < amountOfBytesToBeSent) {
-								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+total, bytesRemainingToBeSent, 0)) == -1 ) {
+							int bytesSent;
+							outputBuffer[counter] = '\0';
+							variableForCounting = counter+1;
+							int bytesleft = variableForCounting;
+							
+							while (totalBytesSent < variableForCounting) {
+								if ((bytesSent = send(new_fd, outputBuffer+totalBytesSent, bytesleft, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
-								printf("Enviados %d bytes \n", bytesReceived);
-								total += bytesReceived;
-								bytesRemainingToBeSent -= bytesReceived;
+								printf("Enviados %d bytes \n", bytesSent);
+								totalBytesSent += bytesSent;
+								bytesleft -= bytesSent;
 							}
 						} else if (inputBuffer[0] == '4') {
 							// Faz match das músicas que possuem mesmo Ano de Lançamento e Idioma e retorna para o cliente
-							char ano[1024];
-							char idioma[1024];
-							int i2 = 1;
-							int i3 = 0, i4 = 0;
-							while (inputBuffer[i2] != '\0') {
-								idioma[i3] = inputBuffer[i2];
-								i2++;
-								i3++;
+							char year[1024];
+							char language[1024];
+							int counter = 1;
+							int counter2 = 0, counter3 = 0;
+							while (inputBuffer[counter] != '\0') {
+								language[counter2] = inputBuffer[counter];
+								counter++;
+								counter2++;
 							}
-							idioma[i3] = inputBuffer[i2];
-							i2++;
+							language[counter2] = inputBuffer[counter];
+							counter++;
 
-							while (inputBuffer[i2] != '\0') {
-								ano[i4] = inputBuffer[i2];
-								i2++;
-								i4++;
+							while (inputBuffer[counter] != '\0') {
+								year[counter3] = inputBuffer[counter];
+								counter++;
+								counter3++;
 							}
-							ano[i4] = inputBuffer[i2];
-
-							char ano2[1024];
-							char idioma2[1024];
+							year[counter3] = inputBuffer[counter];
+							
+							char yearWithPrefix[1024];
+							char languageWithPrefix[1024];
 							char buf2[1024];
-							i3 = 0, i4 = 0;
-							int pi3 = 0;
-							int anoint = atoi(ano);
-							snprintf(ano2, 1024, "Ano de lançamento: %d\n", anoint);
-							int len = 0;
-							snprintf(idioma2, 1024, "Idioma: %s\n", idioma);
-							int c2 = 0, c3 = 0;
-							while ((read = getline(&line, &len, filePointer)) != -1) {
+							counter2 = 0, counter3 = 0;
+							int whereToResetCounter = 0;
+							int yearAsInteger = atoi(year);
+							snprintf(yearWithPrefix, 1024, "Ano de lançamento: %d\n", yearAsInteger);
+							int variableForCounting = 0;
+							snprintf(languageWithPrefix, 1024, "Idioma: %s\n", language);
+							int matchesYearAndLanguage = 0, atLeastOneDoubleMatchFound = 0;
+							while ((readError = getline(&line, &variableForCounting, filePointer)) != -1) {
 								if (startsWith(line, "Idioma:")) {
-									c2 = 0;
-									if (startsWith(line, idioma2)) {
-										c2++;
+									matchesYearAndLanguage = 0;
+									if (startsWith(line, languageWithPrefix)) {
+										matchesYearAndLanguage++;
 									}
-								} else if (startsWith(line, "Ano de lançamento:")) {
-									if (startsWith(line, ano2) && c2) {
-										c2++;
+								} else if (startsWith(line, "Ano de lançamento:")) {	
+									if (startsWith(line, yearWithPrefix) && matchesYearAndLanguage) {
+										matchesYearAndLanguage++;
 									} else {
-										c2 = 0;
+										matchesYearAndLanguage = 0;
 									}
 
-									if (c2 == 2) {
-										c3 = 1;
-										pi3 = i3;
+									if (matchesYearAndLanguage == 2) {
+										atLeastOneDoubleMatchFound = 1;
+										whereToResetCounter = counter2;
 									} else {
-										i3 = pi3;
+										counter2 = whereToResetCounter;
 									}
 								}
-
+								
 
 								if (startsWith(line, "Identificador Único")|| startsWith(line, "Título") || startsWith(line, "Intérprete")) {
-									i4 = 0;
-									while (line[i4] != '\0') {
-										buf2[i3] = line[i4];
-										i3++;
-										i4++;
+									counter3 = 0;
+									while (line[counter3] != '\0') {
+										buf2[counter2] = line[counter3];
+										counter2++;
+										counter3++;
 									}
-								}
+								}	
 							}
-							buf2[i3] = '\0';
-							int counter3 = 0;
-							if (i3) {
-								while (counter3 < i3) {
-									bufferToBeSentToClient[counter3] = buf2[counter3];
-									counter3++;
+							buf2[counter2] = '\0'; 
+							int counter5 = 0;
+							if (counter2) {
+								while (counter5 < counter2) {
+									outputBuffer[counter5] = buf2[counter5];
+									counter5++;
 								}
 							} else {
-								bufferToBeSentToClient[0] = '\0';
+								outputBuffer[0] = '\0';
 							}
-							if (!c3) {
-								i3 = 0;
+							if (!atLeastOneDoubleMatchFound) {
+								counter2 = 0;
 							}
-							int bytesReceived;
-							bufferToBeSentToClient[i3] = '\0';
-							len = i3+1;
-							int bytesRemainingToBeSent = len;
-
-							while (total < len) {
-								if ((bytesReceived = send(new_fd, bufferToBeSentToClient+total, bytesRemainingToBeSent, 0)) == -1 ) {
+							int bytesSent;
+							outputBuffer[counter2] = '\0';
+							variableForCounting = counter2+1;
+							int bytesleft = variableForCounting;
+							
+							while (totalBytesSent < variableForCounting) {
+								if ((bytesSent = send(new_fd, outputBuffer+totalBytesSent, bytesleft, 0)) == -1 ) {
 									printf("Erro no envio n=-1 op7 \n");
 								}
-								printf("Enviados %d bytes \n", bytesReceived);
-								totalBytesSent += bytesReceived;
-								bytesRemainingToBeSent -= bytesReceived;
+								printf("Enviados %d bytes \n", bytesSent);
+								totalBytesSent += bytesSent;
+								bytesleft -= bytesSent;
 							}
 						} else if (inputBuffer[0] == '2') {
 							// Faz match da música que possui o mesmo identificador e reescreve o arquivo de músicas sem ela.
 							int identifier;
 							char identifierString[1024];
-							int i2 = 1;
-							while (inputBuffer[i2] != '\0') {
-								identifierString[i2-1] = inputBuffer[i2];
-								i2++;
+							int counter = 1;
+							while (inputBuffer[counter] != '\0') {
+								identifierString[counter-1] = inputBuffer[counter];
+								counter++;
 							}
-							identifierString[i2-1] = inputBuffer[i2];
+							identifierString[counter-1] = inputBuffer[counter];
 							identifier = atoi(identifierString);
-							char identifierStringWithPrefix[1024];
+							char identifierWithPrefix[1024];
 							char buf2[4096];
-							int whereToWriteTheNextCharacter = 0, counter2 = 0, previousWhereToWriteTheNextCharacter = 0;
-							snprintf(identifierStringWithPrefix, 1024, "Identificador Único: %d\n", identifier);
+							int counter2 = 0, counter3 = 0, whereToResetCounter2 = 0;
+							snprintf(identifierWithPrefix, 1024, "Identificador Único: %d\n", identifier);
 							int lineLength = 0;
-							int hasTheSameIdentifierReceivedInInput = 0;
-							while ((read = getline(&line, &lineLength, filePointer)) != -1) {
-
+							int matchedIdentifier = 0;
+							while ((readError = getline(&line, &lineLength, filePointer)) != -1) {
+								
 								if (startsWith(line, "Identificador Único:")) {
-									if (hasTheSameIdentifierReceivedInInput) {
-										whereToWriteTheNextCharacter = previousWhereToWriteTheNextCharacter;
+									if (matchedIdentifier) {
+										counter2 = whereToResetCounter2;
 									}
-									previousWhereToWriteTheNextCharacter = whereToWriteTheNextCharacter;
+									whereToResetCounter2 = counter2;
 									// i3 = pi3;
-									hasTheSameIdentifierReceivedInInput = startsWith(line, identifierStringWithPrefix);
+									matchedIdentifier = startsWith(line, identifierWithPrefix);
 								}
-								if (hasTheSameIdentifierReceivedInInput) {
+								if (matchedIdentifier) {
 									continue;
 								}
-
-								counter2 = 0;
-								while (line[counter2] != '\0') {
-									buf2[whereToWriteTheNextCharacter] = line[counter2];
-									whereToWriteTheNextCharacter++;
+								
+								counter3 = 0;
+								while (line[counter3] != '\0') {
+									buf2[counter2] = line[counter3];
 									counter2++;
-								}
-							}
-							buf2[whereToWriteTheNextCharacter] = '\0';
-							int counter3 = 0;
-							if (whereToWriteTheNextCharacter) {
-								while (counter3 < whereToWriteTheNextCharacter) {
-									bufferToBeSentToClient[counter3] = buf2[counter3];
 									counter3++;
+								}	
+							}
+							buf2[counter2] = '\0'; 
+							int counter6 = 0;
+							if (counter2) {
+								while (counter6 < counter2) {
+									outputBuffer[counter6] = buf2[counter6];
+									counter6++;
 								}
 							} else {
-								bufferToBeSentToClient[0] = '\0';
+								outputBuffer[0] = '\0';
 							}
 							fclose(filePointer);
-							filePointer = fopen("musicas", "w");
-							fwrite(bufferToBeSentToClient, 1, whereToWriteTheNextCharacter, filePointer);
+							filePointer = fopen("musicas", "wb");
+							fwrite(outputBuffer, 1, counter2, filePointer);
 						}  else if (inputBuffer[0] == '1') {
 							// Copia todo o arquivo de músicas e adiciona a nova música se já não houver outra música com o mesmo identificador
 							// con = identificador + informações
-							char con[1024];
-							int id;
+							char content[1024];
+							int identifier;
 							// idc = "identificador" + o número
-							char idc[1024];
-							int i2 = 1;
-							while (inputBuffer[i2] != '\bytesReceived') {
-								idc[i2-1] = inputBuffer[i2];
-								con[i2-1] = inputBuffer[i2];
-								i2++;
+							char identifierString[1024];
+							int index = 1;
+							while (inputBuffer[index] != ' ') {
+								content[index-1] = inputBuffer[index];
+								index++;
 							}
-							while (inputBuffer[i2] != '\0') {
-								con[i2-1] = inputBuffer[i2];
-								i2++;
+							content[index-1] = inputBuffer[index];
+							index++;
+							int index2 = 0;
+							while (inputBuffer[index] != '\n') {
+								identifierString[index2] = inputBuffer[index];
+								content[index-1] = inputBuffer[index];
+								index++;
 							}
-							idc[i2-1] = inputBuffer[i2];
-							con[i2-1] = inputBuffer[i2];
-							id = atoi(idc);
+							while (inputBuffer[index] != '\0') {
+								content[index-1] = inputBuffer[index];
+								index++;
+							}
+							identifierString[index-1] = inputBuffer[index];
+							content[index-1] = inputBuffer[index];
+							identifier = atoi(identifierString);
 							int len = 0;
-							char idc2[1024];
+							char identifierWithPrefix[1024];
 							char buf2[4096];
-							int i3 = 0, i4 = 0, pi3 = 0;
+							int counter8 = 0, counter7 = 0, pi3 = 0;
 							// Junta string "identificador" com o número
-							snprintf(idc2, 1024, "Identificador Único: %d\n", id);
-							int c2 = 0;
-							while ((read = getline(&line, &len, filePointer)) != -1) {
-
+							snprintf(identifierWithPrefix, 1024, "Identificador Único: %d\n", identifier);
+							int identifierRegisteredBefore = 0;
+							while ((readError = getline(&line, &len, filePointer)) != -1) {
+								
 								if (startsWith(line, "Identificador Único:")) {
-									c2 = startsWith(line, idc2);
-									if (c2) {
+									identifierRegisteredBefore = startsWith(line, identifierWithPrefix);
+									if (identifierRegisteredBefore) {
 										break;
 									}
 								}
-
-								i4 = 0;
-								while (line[i4] != '\0') {
-									buf2[i3] = line[i4];
-									i3++;
-									i4++;
-								}
+								
+								counter7 = 0;
+								while (line[counter7] != '\0') {
+									buf2[counter8] = line[counter7];
+									counter8++;
+									counter7++;
+								}	
 							}
-							if (c2) {
+							if (identifierRegisteredBefore) {
 								// Já encontrada música com mesmo identificador
 							} else {
-								int counter3 = 0;
-								while (con[counter3] != '\0') {
-									buf2[i3] = con[counter3];
-									i3++;
-									counter3++;
+								int counter9 = 0;
+								buf2[counter8] = '\n';
+								counter8++;
+								buf2[counter8] = '\n';
+								counter8++;
+								while (content[counter9] != '\0') {
+									buf2[counter8] = content[counter9];
+									counter8++;
+									counter9++;
 								}
-								buf2[i3] = '\0';
-								counter3 = 0;
-								if (i3) {
-									while (counter3 < i3) {
-										bufferToBeSentToClient[counter3] = buf2[counter3];
-										counter3++;
+								buf2[counter8] = '\0'; 
+								counter9 = 0;
+								if (counter8) {
+									while (counter9 < counter8) {
+										outputBuffer[counter9] = buf2[counter9];
+										counter9++;
 									}
 								} else {
-									bufferToBeSentToClient[0] = '\0';
+									outputBuffer[0] = '\0';
 								}
 								fclose(filePointer);
-								filePointer = fopen("musicas", "w");
-								fwrite(bufferToBeSentToClient, 1, i3, filePointer);
+								filePointer = fopen("musicas", "wb");
+								fwrite(outputBuffer, 1, counter8, filePointer);
 							}
+							
 
-
-
-
-						}
-						fclose(filePointer);
+							
+							
+						} 
+						fclose(filePointer);	
 					}
 
 
@@ -710,116 +721,116 @@ int main(int argc, char* argv[])
 					exit(0);
 				}
 				 close(new_fd);
+				
+			} 
+			if (FD_ISSET(udpSocket, &readfds)) {
+				
 
-			}
-			if (FD_ISSET(datagramSocket, &readfds)) {
-
-
-				bytesReceived = recvfrom(datagramSocket, inputBuffer, 1024, 0, ((struct sockaddr *)&datagramClient_addr), &datagramClientaddr_len);
-				if (bytesReceived == -1) {
+				bytesReceivedOrSent = recvfrom(udpSocket, inputBuffer, 1024, 0, ((struct sockaddr *)&udpClient_addr), &udpClientaddr_len);
+				if (bytesReceivedOrSent == -1) {
 					/* Potencialmente nada para receber
 						- Select acionou quando não deveria
 					*/
 					continue;
 				}
-				total += bytesReceived;
+				totalBytesReceivedOrSent += bytesReceivedOrSent;
 				// bytesleft -= n;
-				counter3 = 0;
-				i2 = 1;
-				char idc[1024];
-				int id;
-				while (counter3 < total) {
-					if (inputBuffer[counter3] == '\0') {
-						while (inputBuffer[i2] != '\0') {
-							idc[i2-1] = inputBuffer[i2];
-							i2++;
+				counter2 = 0;
+				counter = 1;
+				char identifierString[1024];
+				int identifier;
+				while (counter2 < totalBytesReceivedOrSent) {
+					if (inputBuffer[counter2] == '\0') {
+						while (inputBuffer[counter] != '\0') {
+							identifierString[counter-1] = inputBuffer[counter];
+							counter++;
 						}
-						idc[i2-1] = inputBuffer[i2];
-						id = atoi(idc);
-
+						identifierString[counter-1] = inputBuffer[counter];
+						identifier = atoi(identifierString);
+						
 
 						char buf2[1024];
 
 						FILE *fptr;
 						char filename[13];
 						filename[0] = '\0';
-						snprintf(filename, 13, "%d.mp3", id);
+						snprintf(filename, 13, "%d.mp3", identifier);
 						fptr = fopen(filename, "rb");
 						if (fptr != NULL) {
 							// fgets(bufout, 4096, fptr);
-							long size;
+							long fileSize;
 							char* line = NULL;
 							int len = 0;
-							ssize_t read;
+							ssize_t readError;
 
 							fseek(fptr, 0, SEEK_END);
-							size = ftell(fptr);
+							fileSize = ftell(fptr);
 							int rate = 1000;
-							int am = size / 1000;
-
-							char* bufout2 = malloc((size) * sizeof(char));
+							int highestSequenceControlNumber = fileSize / 1000;
+							
+							char* musicContent = malloc((fileSize) * sizeof(char));
 							fseek(fptr, 0, SEEK_SET);
 							rewind(fptr);
-							fread(bufout2, 1, size, fptr);
+							fread(musicContent, 1, fileSize, fptr);
 							// size = size + 6*(am+1);
-							int total = 0;
-							int bytesleft = size;
+							int totalMusicBytesSent = 0;
+							int bytesleft = fileSize;
+							
+							int counter10 = 0;
 
-							int j = 0;
-
-							int tt = 0;
-							while (j <= am) {
-								if (j == 749) {
-									printf("opa\n");
-								}
-								int s2 = 7;
-								char str[s2];
-								sprintf(str, "%06d", j);
-								char str2[6 + min(bytesleft, rate)];
-								memcpy(str2, str, 7);
-								memcpy(str2+6, bufout2+total, min(bytesleft, rate));
+							int totalBytesSent = 0;
+							while (counter10 <= highestSequenceControlNumber) {
+								// if (counter10 == 749) {
+								// 	printf("opa\n");
+								// }
+								int sequenceControlStringLength = 7;
+								char sequenceControl[sequenceControlStringLength];
+								sprintf(sequenceControl, "%06d", counter10);
+								char sequenceControlWithMusicContent[6 + min(bytesleft, rate)];
+								memcpy(sequenceControlWithMusicContent, sequenceControl, 7);
+								memcpy(sequenceControlWithMusicContent+6, musicContent+totalMusicBytesSent, min(bytesleft, rate));
 								int total2 = 0, bytesleft2 = 6 + min(bytesleft, rate);
 								int len2 = bytesleft2;
 								// Envia pacotes de tamanho máximo bytelefts2 = 1006 para evitar desalinhamento e consequentes descartes
 								while (total2 < len2) {
-
-									if ((bytesReceived = sendto(datagramSocket, str2, bytesleft2, 0, (struct sockaddr*)&datagramClient_addr, datagramClientaddr_len)) == -1 ) {
+								
+									if ((bytesReceivedOrSent = sendto(udpSocket, sequenceControlWithMusicContent, bytesleft2, 0, (struct sockaddr*)&udpClient_addr, udpClientaddr_len)) == -1 ) {
 										// printf("Erro no envio n=-1 op8 \n");
 										//skip packet
 										total2 = len2;
 										bytesleft2 = 0;
-
+										
 										continue;
 									}
-
-									tt += bytesReceived;
-									if (bytesReceived != 1006) {
+								
+									totalBytesSent += bytesReceivedOrSent;
+									if (bytesReceivedOrSent != 1006) {
 										// printf("opa\n");
 									}
-									printf("Enviados %d bytes \n", bytesReceived);
-									total2 += bytesReceived;
-									bytesleft2 -= bytesReceived;
+									printf("Enviados %d bytes \n", bytesReceivedOrSent);
+									total2 += bytesReceivedOrSent;
+									bytesleft2 -= bytesReceivedOrSent;
 								}
-								printf("%d\n", j);
+								printf("%d\n", counter10);
 								printf("%d \n", bytesleft);
-								j++;
-								total += total2 - 6;
+								counter10++;
+								totalMusicBytesSent += total2 - 6;
 								bytesleft -= total2 - 6;
-
+								
 							}
-							free(bufout2);
-							printf("tt: %d \n", tt);
-
+							free(musicContent);
+							printf("tt: %d \n", totalBytesSent);
+							
 						}
 						fclose(fptr);
-						total = 0;
+						totalBytesReceivedOrSent = 0;
 						inputBuffer[0] = '\0';
 						inputBuffer[1] = '\0';
-						counter3 = 0;
-						i2 = 1;
+						counter2 = 0;
+						counter = 1;
 						break;
 					}
-					counter3++;
+					counter2++;
 				}
 			}
 		}

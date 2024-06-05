@@ -1,7 +1,7 @@
 /*
 ** server.c -- a stream socket server demo
 */
-
+#define _XOPEN_SOURCE 700
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -57,25 +57,25 @@ int main(int argc, char* argv[]) {
 	char* porttcp = argv[2];
 	char* portudp = argv[3];
 
-	struct addrinfo hints, *res;
-    int sockfd;
+	struct addrinfo tcpHints, *tcpRes;
+    int tcpSocket;
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;     
-    hints.ai_socktype = SOCK_STREAM; 
+    memset(&tcpHints, 0, sizeof tcpHints);
+    tcpHints.ai_family = AF_UNSPEC;     
+    tcpHints.ai_socktype = SOCK_STREAM; 
 
 
  
     int rv;
 
-    if ((rv = getaddrinfo(serverip, porttcp, &hints, &res)) != 0) {
+    if ((rv = getaddrinfo(serverip, porttcp, &tcpHints, &tcpRes)) != 0) {
         fprintf(stderr, "getaddrinfo tcp: %s\n", gai_strerror(rv));
     }
 
-    struct addrinfo *p;
+    struct addrinfo *tcpP;
 	//Tentativa de criação de socket TCP
-    for (p = res; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+    for (tcpP = tcpRes; tcpP != NULL; tcpP = tcpP->ai_next) {
+        if ((tcpSocket = socket(tcpP->ai_family, tcpP->ai_socktype, tcpP->ai_protocol)) == -1) {
             perror("tcp socket \n");
             continue;
         }
@@ -83,41 +83,41 @@ int main(int argc, char* argv[]) {
     }
 
 
-	int dsockfd;
-	struct addrinfo dhints, *dservinfo, *dp;
-	int drv;
-	int dnumbytes;
+	int udpSocket;
+	struct addrinfo udpHints, *udpServinfo, *udpP;
+	int udpRv;
+	int udpNumbytes;
 
-	memset(&dhints, 0, sizeof dhints);
-	dhints.ai_family = AF_UNSPEC;
-	dhints.ai_socktype = SOCK_DGRAM;
+	memset(&udpHints, 0, sizeof udpHints);
+	udpHints.ai_family = AF_UNSPEC;
+	udpHints.ai_socktype = SOCK_DGRAM;
 
-	if ((drv = getaddrinfo(serverip, portudp, &dhints, &dservinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(drv));
+	if ((udpRv = getaddrinfo(serverip, portudp, &udpHints, &udpServinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udpRv));
 		return 1;
 	}
 
 	// Tentativa de criação de socket UDP
-	for (dp = dservinfo; dp != NULL; dp = dp->ai_next) {
-		if ((dsockfd = socket(dp->ai_family, dp->ai_socktype, dp->ai_protocol)) == -1) {
+	for (udpP = udpServinfo; udpP != NULL; udpP = udpP->ai_next) {
+		if ((udpSocket = socket(udpP->ai_family, udpP->ai_socktype, udpP->ai_protocol)) == -1) {
 			perror("talker: socket");
 			continue;
 		}
 		break;
 	}
 
-	if (dp == NULL) {
+	if (udpP == NULL) {
 		fprintf(stderr, "talker: failed to create socket\n");
 		return 2;
 	}
 
-	connect(sockfd, p->ai_addr, p->ai_addrlen);
+	connect(tcpSocket, tcpP->ai_addr, tcpP->ai_addrlen);
 	
-	struct sockaddr_storage their_addr;
-	socklen_t addr_len;
+	struct sockaddr_storage udp_their_addr;
+	socklen_t uddp_addr_len;
 	while (1) {
-		int op = 0;
-		while (op < 1 || op > 9) {
+		int operation = 0;
+		while (operation < 1 || operation > 9) {
 			printf("Selecione a operação: \n");
 			printf("1 - Cadastrar uma nova música utilizando um identificador \n");
 			printf("2 - Remover uma música a partir de seu identificador \n");
@@ -128,42 +128,48 @@ int main(int argc, char* argv[]) {
 			printf("7 - Listar todas as informações de todas as músicas \n");
 			printf("8 - fazer um download de uma música a partir de seu identificador \n");
 			printf("9 - Sair\n");
-			scanf("%d", &op);
+			scanf("%d", &operation);
 		}
-		if (op == 9) {
+		if (operation == 9) {
 			break;
 		}
 		// int op = atoi(argv[1]); 
 		int i = 0;
-		char buffer[1024];
-		buffer[0] = '0' + op;
+		char outputBuffer[1024];
+		outputBuffer[0] = '0' + operation;
 		char filename[14];
-		if ((op!= 7)) {
+		if ((operation!= 7)) {
 			char content[1024];
-			if ((op == 2) || (op == 6) || (op == 8)) {
+			if ((operation == 2) || (operation == 6) || (operation == 8)) {
 				printf("Digite o identificador: \n");
-			} else if (op == 3) {
+			} else if (operation == 3) {
 				printf("Digite o ano: \n");
-			} else if (op == 4) {
+			} else if (operation == 4) {
 				printf("Digite o idioma: \n");
-			} else if (op == 1) {
+			} else if (operation == 1) {
 				printf("Coloque todas as informações da música (e digite Tab e aperte Enter no final): \n");
 			} else {
 				printf("Digite o tipo: \n");
 			}
 			
-			if (op != 1) {
+			if (operation != 1) {
 				scanf("%s", content);
 			} else {
 				// Lê diversas linhas esperando um Tab. Então para.
 				scanf("%[^\t]",content);
 			}
-			
-			while (content[i] != '\0') {
-				buffer[i+1] = content[i];
-				i++;
+			if (operation == 1) {
+				while (content[i+1] != '\0') {
+					outputBuffer[i+1] = content[i+1];
+					i++;
+				}
+			} else {
+				while (content[i] != '\0') {
+					outputBuffer[i+1] = content[i];
+					i++;
+				}
 			}
-			if (op == 8) {
+			if (operation == 8) {
 				int j = 0;
 				while (content[j] != '\0') {
 					filename[j] = content[j];
@@ -178,8 +184,8 @@ int main(int argc, char* argv[]) {
 
 			char* content2 = NULL;
 			
-			if (op == 4) {
-				buffer[i+1] = '\0';
+			if (operation == 4) {
+				outputBuffer[i+1] = '\0';
 				i++;
 				printf("Digite o ano: \n");
 				scanf("%ms", &content2);
@@ -187,7 +193,7 @@ int main(int argc, char* argv[]) {
 
 				int j = 0;
 				while (content2[j] != '\0') {
-					buffer[i+1] = content2[j];
+					outputBuffer[i+1] = content2[j];
 					i++;
 					j++;
 				}
@@ -197,176 +203,177 @@ int main(int argc, char* argv[]) {
 			
 
 			i++;
-			buffer[i] = '\0';
-			int total = 0;
-			int bytesleft = i + 1, len = i + 1;
-			int n;
-			if (op != 8) {
-				while (total < len) {
-					n  = send(sockfd, buffer+total, bytesleft, 0);
-					if (n == -1) {
+			outputBuffer[i] = '\0';
+			int totalBytesSent = 0;
+			int bytesleft = i + 1, totalBytesToBeSent = i + 1;
+			int bytesSent;
+			if (operation != 8) {
+				while (totalBytesSent < totalBytesToBeSent) {
+					bytesSent  = send(tcpSocket, outputBuffer+totalBytesSent, bytesleft, 0);
+					if (bytesSent == -1) {
 						// printf("erro: n=-1 no op entre 1 e 6\n"); 
 						break; 
 					}
-					total += n;
-					bytesleft -= n;
+					totalBytesSent += bytesSent;
+					bytesleft -= bytesSent;
 				}
-				char bufin[4096];
-				bufin[0] = '\0';
-				total = 0;
+				char response[4096];
+				response[0] = '\0';
+				totalBytesSent = 0;
 				bytesleft = 4096;
 				int j = 0;
-				int f2 = 0;
-				if ((op != 2) && (op != 1)) {
-					while (total < 4096) {
-						n = recv(sockfd, bufin+total, bytesleft, 0);
-						if (n == 0) {
+				int endOfResponseOfThisSpecificRequest = 0;
+				if ((operation != 2) && (operation != 1)) {
+					while (totalBytesSent < 4096) {
+						bytesSent = recv(tcpSocket, response+totalBytesSent, bytesleft, 0);
+						if (bytesSent == 0) {
 							break;
 						}
-						total += n;
-						bytesleft -= n;
-						while (j < total) {
-							if (bufin[j] == '\0') {
-								f2 = 1;
+						totalBytesSent += bytesSent;
+						bytesleft -= bytesSent;
+						while (j < totalBytesSent) {
+							if (response[j] == '\0') {
+								endOfResponseOfThisSpecificRequest = 1;
 								break;
 							}
 							j++;
 						}
-						if (f2) {
+						if (endOfResponseOfThisSpecificRequest) {
 							break;
 						}
 					}
-					printf(bufin);
+					printf(response);
 				}
 			} else {
-				while (total < len) {
-					n = sendto(dsockfd, buffer+total, bytesleft, 0, dp->ai_addr, dp->ai_addrlen);
-					if (n == -1) {
+				while (totalBytesSent < totalBytesToBeSent) {
+					bytesSent = sendto(udpSocket, outputBuffer+totalBytesSent, bytesleft, 0, udpP->ai_addr, udpP->ai_addrlen);
+					if (bytesSent == -1) {
 						// printf("erro n=-1 no op 8");
 						break;
 					}
-					total += n;
-					bytesleft -= n;
+					totalBytesSent += bytesSent;
+					bytesleft -= bytesSent;
 				}
 				fd_set readfds;
 				int total2 = 0;
-				char* bufin = malloc(1024*1024*10 * sizeof(char));
+				char* music = malloc(1024*1024*10 * sizeof(char));
 				for (int i = 0; i< 1024*1024*10; i++) {
-					bufin[i] = '\0';
+					music[i] = '\0';
 				}
 				bytesleft = 1024*1024*10;
-				bufin[bytesleft-1] = '\0';
+				music[bytesleft-1] = '\0';
 				int rate = 1000;
 				char buft[rate+6];
-				int high = 0;
-				int hs = 0;
-				int tt = 0;
+				int amountOfBytes = 0;
+				int highestSequenceControl2 = 0;
+				int totalBytesReceived = 0;
 				while (1) {
 					struct timeval tv;
 					FD_ZERO(&readfds);
-					FD_SET(dsockfd, &readfds);
-					int n2 = dsockfd+1;
+					FD_SET(udpSocket, &readfds);
+					int n2 = udpSocket+1;
 					tv.tv_sec = 2;
 					tv.tv_usec = 0;
-					drv = select(n2, &readfds, NULL, NULL, &tv);
-					if (drv == -1) {
+					udpRv = select(n2, &readfds, NULL, NULL, &tv);
+					if (udpRv == -1) {
 						perror("select");	
-						bufin[total2] = '\0';
+						music[total2] = '\0';
 						break;
-					} else if (drv == 0) {
-						bufin[total2] = '\0';
+					} else if (udpRv == 0) {
+						music[total2] = '\0';
 						break;
 						//printf("Timeout occurred! No data after 1 second. \n");
 					} else {
-						int n3 = recvfrom(dsockfd, buft, rate+6, 0, (struct sockaddr *)&their_addr, &addr_len);
+						int bytesReceived = recvfrom(udpSocket, buft, rate+6, 0, (struct sockaddr *)&udp_their_addr, &uddp_addr_len);
 						
 						// A variável t representa número de sequẽncia inválido.
-						int t = 0;
-						for (int i = 0; (i < 6) && (i < n3); i++) {
+						int invalidSequenceControlNumber = 0;
+						for (int i = 0; (i < 6) && (i < bytesReceived); i++) {
 							if ((buft[i] >'9') || (buft[i] < '0')) {
-								t = 1;
+								invalidSequenceControlNumber = 1;
 								break;
 							}
 						}
 						// Os 6 primeiros bytes são apenas números de sequência. 
 						// Se só tiver recebido números de sequẽncia ou houver menos número do que o necessário
 						// para identificar qual é o número de sequência, então pula
-						if ((n3 <= 6) || t) {
+						if ((bytesReceived <= 6) || invalidSequenceControlNumber) {
 							printf("opa\n");
 							continue;
 						}
-						tt += n3;
-						char n4[7];
-						memcpy(n4, buft, 6);
-						n4[6] = '\0';
+						totalBytesReceived += bytesReceived;
+						char sequenceControl[7];
+						memcpy(sequenceControl, buft, 6);
+						sequenceControl[6] = '\0';
 						// Converte de string para inteiro.
-						int seq = (int) strtol(n4, (char**) NULL, 10);
-						int i4 = 6;
-						hs = max(hs, seq);
+						int sequenceControlAsInteger = (int) strtol(sequenceControl, (char**) NULL, 10);
+						int firstContentIndex = 6;
+						int contentIndex = firstContentIndex;
+						highestSequenceControl2 = max(highestSequenceControl2, sequenceControlAsInteger);
 						
 
-						while (i4 < n3) {
-							if (seq * rate + i4 < 1024*1024*10-1) {
+						while (contentIndex < bytesReceived) {
+							if (sequenceControlAsInteger * rate + contentIndex < 1024*1024*10-1) {
 								// Coloca os dados recebidos no número de sequẽncia correspondente.
-								bufin[seq * rate + i4] = buft[i4];
+								music[sequenceControlAsInteger * rate + contentIndex-firstContentIndex] = buft[contentIndex];
 							}
 							// A variável é utilizada como uma forma rudimentar de auferir o tamanho real da música,
 							// ao invés de utilizar o tamanho 1024*1024*10 do tamanho do vetor bufin.
-							high = max(high, seq*rate+i4);
-							i4++;
+							amountOfBytes = max(amountOfBytes, sequenceControlAsInteger*rate+contentIndex-firstContentIndex);
+							contentIndex++;
 						}
 					}
 
 				}
-				printf("%d\n", tt);
-				FILE* fptr = fopen(filename, "wb");
-				high++;
-				fwrite(bufin, 1, high, fptr);
-				fclose(fptr);
-				free(bufin);
+				printf("%d\n", totalBytesReceived);
+				FILE* filePointer = fopen(filename, "wb");
+				amountOfBytes++;
+				fwrite(music, 1, amountOfBytes, filePointer);
+				fclose(filePointer);
+				free(music);
 			}
 			
 		} else {
 			// Operação de listagem de todas as informações de todas as músicas. (Operação 7)
 			// É enviada somente a operação.
-			buffer[0] = '7';
-			buffer[1] = '\0';
-			int total = 0;
+			outputBuffer[0] = '7';
+			outputBuffer[1] = '\0';
+			int totalBytesSent = 0;
 			int bytesleft = 2;
-			int len = 2;
-			int n;
-			while (total < len) {
-				n = send(sockfd, buffer+total, bytesleft, 0);
-				if (n == -1) {
+			int bytesToBeSent = 2;
+			int bytesSent;
+			while (totalBytesSent < bytesToBeSent) {
+				bytesSent = send(tcpSocket, outputBuffer+totalBytesSent, bytesleft, 0);
+				if (bytesSent == -1) {
 					printf("erro n=-1 no envio op 7 \n");
 					break;
 				}
-                printf("enviados %d bytess \n", n);
-				total += n;
-				bytesleft -= n;
+                printf("enviados %d bytess \n", bytesSent);
+				totalBytesSent += bytesSent;
+				bytesleft -= bytesSent;
 			}
-            char bufin[4096];
-			bufin[0] = '\0';
-            total = 0;
+            char response[4096];
+			response[0] = '\0';
+            totalBytesSent = 0;
             bytesleft = 4096;
             int j = 0;
-			int f2 = 0;
-            while (total < 4096) {
-                n = recv(sockfd, bufin+total, bytesleft, 0);
-                total += n;
-                bytesleft -= n;
-                while (j < total) {
-                    if (bufin[j] == '\0') {
-						f2 = 1;
+			int thisIsEnoughForTheResponseOfThisRequest = 0;
+            while (totalBytesSent < 4096) {
+                bytesSent = recv(tcpSocket, response+totalBytesSent, bytesleft, 0);
+                totalBytesSent += bytesSent;
+                bytesleft -= bytesSent;
+                while (j < totalBytesSent) {
+                    if (response[j] == '\0') {
+						thisIsEnoughForTheResponseOfThisRequest = 1;
                         break;
                     }
                     j++;
                  }
-				 if (f2) {
+				 if (thisIsEnoughForTheResponseOfThisRequest) {
 					break;
 				 }
             }
-			printf(bufin);
+			printf(response);
             
 		}
 	}
