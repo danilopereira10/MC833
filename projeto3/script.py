@@ -13,35 +13,57 @@ def count_icmp_packets(pcap_file, srcip, destip):
     # for i in icmp_packets:
     #     print(i)
     # print(icmp_packets[0].show())
-    packets0 = [pkt for pkt in icmp_packets if pkt[IP].src == '10.0.0.1']
+    packets0 = [pkt for pkt in icmp_packets if pkt[IP].src == srcip]
     for i in packets0:
-        print(i.show())
-    packets02 = [pkt for pkt in packets0 if pkt[IP].dst == '10.0.0.3']
+        print(i.sent)
+        print(i.time)
+        # print(len(i))
+        # print(i.sprintf("%IP.len%"))
+    packets02 = [pkt for pkt in packets0 if pkt[IP].dst == destip]
 
-    packets1 = [pkt for pkt in icmp_packets if pkt[IP].src == '10.0.0.2']
-    packets12 = [pkt for pkt in packets1 if pkt[IP].dst == '10.0.0.4']
+    return packets02
 
-    packets2 = [pkt for pkt in icmp_packets if pkt[IP].src == '10.0.0.3']
-    packets22 = [pkt for pkt in packets2 if pkt[IP].dest == '10.0.0.1']
+def min(packets):
+    p = packets[0]
+    for pkt in packets:
+        if pkt.sent_time < p.sent_time:
+            p = pkt
+    return p.sent_time
 
-    packets3 = [pkt for pkt in icmp_packets if pkt[IP].src == '10.0.0.4']
-    packets32 = [pkt for pkt in icmp_packets if pkt[IP].dest == '10.0.0.2']
-    # print(icmp_packets[0][IP].src)
-    # logfile = rdpcap(pcap_file)
-    # pprint(list(logfile))
-    # icmp_packets = [pkt for pkt in logfile if ICMP in pkt]
-    # for i in logfile:
-    #     i
-    return len(icmp_packets)
+def max(packets):
+    p = packets[0]
+    for pkt in packets:
+        if pkt.time > p.time:
+            p = pkt
+    return p.time
+
+def interval_difference(packets):
+    t = 0
+    for i in range(1, len(packets)):
+        t += packets[i].time - packets[i-1].time
+    return t / (len(packets)-1)
+
+
 
 if __name__=='__main__':
     pcap_file = "c.pcap"
     
-    icmp_packet_count1 = count_icmp_packets(pcap_file)
-    icmp_packet_count2 = count_icmp_packets(pcap_file)
-    icmp_packet_count3 = count_icmp_packets(pcap_file)
-    icmp_packet_count4 = count_icmp_packets(pcap_file)
-    print("Total number of ICMP packets: ", icmp_packet_count)
+    packets1 = count_icmp_packets(pcap_file, srcip="10.0.0.1", destip="10.0.0.3")
+    print("src: 10.0.0.1")
+    print("dest: 10.0.0.3")
+    t = averageIntervalDifference = interval_difference(packets1)
+    # m = min(packets1)
+    ma = packets1[len(packets1)-1].time
+    print("Throughput: ")
+    print("Intervalo médio entre os pacotes: ", t)
+    print("Total de pacotes: ", len(packets1))
+    
+    print((ma - m) / len(packets1))
+    # int m = packets1[0]
+    packets2 = count_icmp_packets(pcap_file, srcip="10.0.0.2", destip="10.0.0.4")
+    packets3 = count_icmp_packets(pcap_file, srcip="10.0.0.3", destip="10.0.0.1")
+    packets4 = count_icmp_packets(pcap_file, srcip="10.0.0.4", destip="10.0.0.2")
+    print("Total number of ICMP packets: ", icmp_packet_count1)
 
 # ans = sr([IP(dst="8.8.8.8", ttl=(1, 8), options=IPOption_RR())/ICMP(seq=RandShort()), IP(dst="8.8.8.8", ttl=(1, 8), options=IPOption_Traceroute())/ICMP(seq=RandShort()), IP(dst="8.8.8.8", ttl=(1, 8))/ICMP(seq=RandShort())], verbose=False, timeout=3)[0]
 # ans.make_table(lambda x, y: (", ".join(z.summary() for z in x[IP].options) or '-', x[IP].ttl, y.sprintf("%IP.src% %ICMP.type%")))
