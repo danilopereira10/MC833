@@ -35,7 +35,7 @@ def print_info(packets, sourceIp, destinationIp):
 
 
 if __name__=='__main__':
-    pcap_file = "cap.pcap"
+    pcap_file = "capt.pcap"
     packets = rdpcap(pcap_file)
     print_info(packets, sourceIp="10.0.0.1", destinationIp="10.0.0.3")
     print_info(packets, sourceIp="10.0.0.3", destinationIp="10.0.0.1")
