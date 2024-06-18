@@ -10,10 +10,10 @@ def get_icmp_packets(packets, sourceIp, destinationIp):
 
     return packetsFromSourceToDestination
 
-#Método para calcular a quantidade de bytes presente numa lista de pacotes, desconsiderando o primeiro pacote
+#Método para calcular a quantidade de bytes presente numa lista de pacotes
 def amountOfBytes(packets):
     totalBytes = 0
-    for index in range(1, len(packets)):
+    for index in range(0, len(packets)):
         totalBytes += len(packets[index])
     return totalBytes
 
@@ -26,7 +26,7 @@ def print_info(allPackets, sourceIp, destinationIp):
 
     receivedPackets = get_icmp_packets(allPackets, sourceIp=destinationIp, destinationIp=sourceIp)
     
-    highestArrivalTime = sentPackets[-1].time
+    highestArrivalTime = receivedPackets[-1].time
     totalBytesSent = amountOfBytes(sentPackets)
     print("Throughput:", totalBytesSent / (highestArrivalTime-sentPackets[0].time), "bytes por segundo")
     averageIntervalDifference = (highestArrivalTime-receivedPackets[0].time) / (len(sentPackets)-1)
