@@ -1,27 +1,32 @@
 import nest_asyncio
 nest_asyncio.apply()
-import pandas as pd
+# import pandas as pd
 from scapy.all import *
-import glob
-import numpy as np
+# import glob
+# import numpy as np
 import os
-from pprint import pprint
+# from pprint import pprint
 
-def count_icmp_packets(pcap_file, srcip, destip):
-    packets = rdpcap(pcap_file)
+def get_icmp_packets(packets, srcip, destip):
     icmp_packets = [pkt for pkt in packets if ICMP in pkt]
     # for i in icmp_packets:
     #     print(i)
     # print(icmp_packets[0].show())
-    packets0 = [pkt for pkt in icmp_packets if pkt[IP].src == srcip]
-    for i in packets0:
-        print(i.sent)
-        print(i.time)
+    srcpackets = [pkt for pkt in icmp_packets if pkt[IP].src == srcip]
+    # for i in packets0:
+        # print(i.sent)
+        # print(i.time)
         # print(len(i))
         # print(i.sprintf("%IP.len%"))
-    packets02 = [pkt for pkt in packets0 if pkt[IP].dst == destip]
+    srcToDestPackets = [pkt for pkt in srcpackets if pkt[IP].dst == destip]
 
-    return packets02
+    return srcToDestPackets
+
+def amountOfBytes(packets):
+    t = 0
+    for i in range(1, len(packets)):
+        t += len(packets[i])
+    return t
 
 def min(packets):
     p = packets[0]
@@ -44,26 +49,31 @@ def interval_difference(packets):
     return t / (len(packets)-1)
 
 
+def print_info(packets, srcip, destip):
+    packets = get_icmp_packets(packets, srcip, destip)
+    print("src: ", srcip)
+    print("dest: ", destip)
+    
+    # m = min(packets1)
+    ma = packets[-1].time
+    n = amountOfBytes(packets)
+    print("Throughput:", (n) / (ma-packets[0].time), "bytes per second")
+    averageIntervalDifference = (ma-packets[0].time) / (len(packets)-1)
+    print("Intervalo médio entre os pacotes:", averageIntervalDifference, "segundos")
+    print("Total de pacotes:", len(packets))
+    print()
+    
+    
+
 
 if __name__=='__main__':
-    pcap_file = "c.pcap"
+    pcap_file = "cap.pcap"
+    packets = rdpcap(pcap_file)
+    print_info(packets, srcip="10.0.0.1", destip="10.0.0.3")
+    print_info(packets, srcip="10.0.0.3", destip="10.0.0.1")
+    print_info(packets, srcip="10.0.0.2", destip="10.0.0.4")
+    print_info(packets, srcip="10.0.0.4", destip="10.0.0.2")
     
-    packets1 = count_icmp_packets(pcap_file, srcip="10.0.0.1", destip="10.0.0.3")
-    print("src: 10.0.0.1")
-    print("dest: 10.0.0.3")
-    t = averageIntervalDifference = interval_difference(packets1)
-    # m = min(packets1)
-    ma = packets1[len(packets1)-1].time
-    print("Throughput: ")
-    print("Intervalo médio entre os pacotes: ", t)
-    print("Total de pacotes: ", len(packets1))
-    
-    print((ma - m) / len(packets1))
-    # int m = packets1[0]
-    packets2 = count_icmp_packets(pcap_file, srcip="10.0.0.2", destip="10.0.0.4")
-    packets3 = count_icmp_packets(pcap_file, srcip="10.0.0.3", destip="10.0.0.1")
-    packets4 = count_icmp_packets(pcap_file, srcip="10.0.0.4", destip="10.0.0.2")
-    print("Total number of ICMP packets: ", icmp_packet_count1)
 
 # ans = sr([IP(dst="8.8.8.8", ttl=(1, 8), options=IPOption_RR())/ICMP(seq=RandShort()), IP(dst="8.8.8.8", ttl=(1, 8), options=IPOption_Traceroute())/ICMP(seq=RandShort()), IP(dst="8.8.8.8", ttl=(1, 8))/ICMP(seq=RandShort())], verbose=False, timeout=3)[0]
 # ans.make_table(lambda x, y: (", ".join(z.summary() for z in x[IP].options) or '-', x[IP].ttl, y.sprintf("%IP.src% %ICMP.type%")))
